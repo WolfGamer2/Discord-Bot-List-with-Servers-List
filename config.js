@@ -10,7 +10,7 @@ module.exports = {
 
     website: {
         callback: "https://dumbbotlist.tk/callback",
-        secret: "llpaxurvcnJTqBDWj-AudXX_FiOZGE3O",
+        secret: "r1mXCFp08HBklNorIhHFOS_wJoC8d-zS",
         clientID: "849617280245432340",
         tags: [ "Moderation", "Fun", "Minecraft","Economy","Guard","NSFW","Anime","Invite","Music","Logging", "Web Dashboard", "Reddit", "Youtube", "Twitch", "Crypto", "Leveling", "Game", "Roleplay", "Utility"]    
     },
@@ -21,7 +21,17 @@ module.exports = {
                 booster: "849623732905443362",
                 sponsor: "849623732925366282",
                 supporter: "849623732888141872",
-                partnerRole: "849623732905443366"
+                partnerRole: "849679589029707776"
+            },
+             codeshare: {
+                javascript: "850738844792782858",
+                html: "850738896413261847",
+                altyapilar: "850738998150561833",
+                bdfd: "850739027769688104",
+                besdavet: "850740000358268929",
+                ondavet: "850740037016223795",
+                onbesdavet: "850740080662675467",
+                yirmidavet: "850740115256508468"
             },
             botlist: {
                 developer: "849678998195929089",
@@ -41,6 +51,16 @@ module.exports = {
                 supporter: "849679475344015421",
                 partnerRole: "849679589029707776"
             },
+                codeshare: {
+                javascript: "850738844792782858",
+                html: "850738896413261847",
+                altyapilar: "850738998150561833",
+                bdfd: "850739027769688104",
+                besdavet: "850740000358268929",
+                ondavet: "850740037016223795",
+                onbesdavet: "850740080662675467",
+                yirmidavet: "850740115256508468"
+            },
              botlist: {
                 developer: "849678998195929089",
                 certified_developer: "849678998195929089",
@@ -49,6 +69,7 @@ module.exports = {
             }
         },
         channels: {
+          codelog: "849623735047946303",
             login: "849623735047946303",
             webstatus: "849623735047946303",
             uptimelog: "849623735047946303",
@@ -67,7 +88,17 @@ module.exports = {
                 booster: "849623732905443362",
                 sponsor: "849623732925366282",
                 supporter: "849623732888141872",
-                partnerRole: "849623732905443366"
+                partnerRole: "849679589029707776"
+            },
+           codeshare: {
+                javascript: "850738844792782858",
+                html: "850738896413261847",
+                altyapilar: "850738998150561833",
+                bdfd: "850739027769688104",
+                besdavet: "850740000358268929",
+                ondavet: "850740037016223795",
+                onbesdavet: "850740080662675467",
+                yirmidavet: "850740115256508468"
             },
             botlist: {
                 developer: "849678998195929089",
@@ -85,7 +116,7 @@ module.exports = {
 
     website: {
         callback: "https://dumbbotlist.tk/callback",
-        secret: "llpaxurvcnJTqBDWj-AudXX_FiOZGE3O",
+        secret: "r1mXCFp08HBklNorIhHFOS_wJoC8d-zS",
         clientID: "849617280245432340",
         tags: [ "Moderation", "Fun", "Minecraft","Economy","Guard","NSFW","Anime","Invite","Music","Logging", "Web Dashboard", "Reddit", "Youtube", "Twitch", "Crypto", "Leveling", "Game", "Roleplay", "Utility"]    
     },
@@ -101,21 +132,39 @@ module.exports = {
                 supporter: "849623732888141872",
                 partnerRole: "849623732905443366"
             },
+              codeshare: {
+                javascript: "850738844792782858",
+                html: "850738896413261847",
+                altyapilar: "850738998150561833",
+                bdfd: "850739027769688104",
+                besdavet: "850740000358268929",
+                ondavet: "850740037016223795",
+                onbesdavet: "850740080662675467",
+                yirmidavet: "850740115256508468"
+            },
             botlist: {
                 developer: "849623732888141868",
                 certified_developer: "849623732888141870",
                 bot: "849623732871757860",
-                certified_bot: "849623732871757861"
+                certified_bot: "849678582565568533"
             }
         },
         channels: {
+          codelog: "849623735047946303",
             login: "849623735047946303",
             webstatus: "849623735047946303",
             uptimelog: "849623735047946303",
             botlog: "849623735047946303",
             votes: "849623735047946303"
         }
-    }
-
+    },
+channels: {
+  codelog: "849623735047946303",
+            login: "849623735047946303",
+            webstatus: "849623735047946303",
+            uptimelog: "849623735047946303",
+            botlog: "849623735047946303",
+            votes: "849623735047946303"
+        }
 
 }

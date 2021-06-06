@@ -57,6 +57,20 @@
                         <a class="bg-dark-200 text-white collapse-item" href="/admin/uptimes">Links</a>
                     </div>
                 </div>
+                <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePagesss"
+                    aria-expanded="true" aria-controls="collapsePagesss">
+                    <i class="fas fa-fw fa-code"></i>
+                    <span>Code Share</span>
+                </a>
+                <div id="collapsePagesss" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+                    <div class="bg-dark-200 py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">dumbbotlist.tk</h6>
+                        <a class="bg-dark-200 text-white collapse-item" href="/admin/addcode">Add Code</a>
+                        <a class="bg-dark-200 text-white collapse-item" href="/admin/codes">Codes</a>
+                    </div>
+                </div>
+            </li>
             <% if(global.config.bot.owners.includes(req.user.id)) { %>
                 <li class="nav-item">
                     <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#vCodesAdmin"

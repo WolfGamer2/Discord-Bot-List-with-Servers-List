@@ -5,8 +5,21 @@ module.exports = {
   name: "botinfo",
   aliases: [],
  run: async(client, message, args) => {
-   if(!args[0]) return message.channel.send("Error: Please write bot id.");
-   let b = await bots.findOne({ botID: args[0] });
+  
+    var bot = message.mentions.users.first()
+    if(bot)
+    {
+      var bot = bot;
+    } else {
+      var bot = args[0];
+     var bot = client.users.cache.get(bot)
+    }
+    if(!bot)
+    {
+      return message.channel.send("You have given an invalid bot id or mention")
+    }
+    
+   let b = await bots.findOne({ botID: bot.id });
    if(!b) return message.channel.send("Invalid bot id.")
    let website = b.website ?  " | [Website]("+b.website+")" : "";
    let github = b.github ? " | [Github]("+b.github+")" : "";
@@ -20,7 +33,7 @@ module.exports = {
    const embed = new Discord.MessageEmbed()
    .setThumbnail(b.avatar)
    .setAuthor(b.username+"#"+b.discrim, b.avatar)
-   .setDescription("**[Vote for the bot named "+b.username+"#"+b.discrim+" in vCodes.](https://hypertown.fun/bot/"+b.botID+"/vote)**")
+   .setDescription("**[Vote for the bot named "+b.username+"#"+b.discrim+" in Dumb Bot List.](https://dumbbotlist.tk/bot/"+b.botID+"/vote)**")
    .addField("ID", b.botID, true)
    .addField("Username", b.username, true)
    .addField("Discriminator", b.discrim, true)

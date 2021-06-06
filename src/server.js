@@ -9,7 +9,9 @@
   const Discord = require("discord.js");
   const config = require("../config.js");
   const roles = config.roles;
-  const channels = config.server.channels;
+  const db = require("quick.db");
+  const parseMilliseconds = require("parse-ms");
+  const channels = config.channels;
   const app = express();
   const MemoryStore = require("memorystore")(session);
   const fetch = require("node-fetch");
@@ -22,8 +24,12 @@
   const uptimeSchema = require("./database/models/uptime.js");
   const banSchema = require("./database/models/site-ban.js");
   const maintenceSchema = require('./database/models/bakim.js');
-
+const codesSchema = require("./database/models/codes.js");
   module.exports = async (client) => {
+   var certirole = config.roles.botlist.certified_bot;
+    var botrole = config.roles.botlist.bot;
+   var devrole = config.roles.botlist.developer;
+    var certidevrole = config.roles.botlist.certified_developer
     const templateDir = path.resolve(`${process.cwd()}${path.sep}src/views`);
     app.use("/css", express.static(path.resolve(`${templateDir}${path.sep}assets/css`)));
     app.use("/js", express.static(path.resolve(`${templateDir}${path.sep}assets/js`)));
@@ -179,8 +185,14 @@
     app.get("/discord", (req, res) => {
       res.redirect('https://discord.gg/78ZCFKUpx5');
     });  
-    app.get("/error", (req, res) => {
-          renderTemplate(res, req, "pages/error.ejs", {req, config, res, roles, channels});
+   app.get("/error", (req, res) => {
+        renderTemplate(res, req, "pages/error.ejs", {
+            req,
+            config,
+            res,
+            roles,
+            channels
+        });
     });
     app.get("/partners", checkMaintence, (req, res) => {
         const Database = require("void.db");
@@ -336,9 +348,13 @@
             });
           })
     app.get("/addbot", checkMaintence, checkAuth, async (req,res) => {
-  
+      if(!client.guilds.cache.get(config.server.id).members.fetch(req.user.id)) {
+        return res.redirect("/error?code=404&message=You Must be in Our Support Server to do this");
+      }
       renderTemplate(res, req, "botlist/addbot.ejs", {req, roles, config});
     })
+
+
     app.get("/bot/:botID/vote", checkMaintence, async (req,res) => {
       let botdata = await botsdata.findOne({ botID: req.params.botID });
       if(!botdata) return res.redirect("/error?code=404&message=You entered an invalid bot id.");
@@ -349,18 +365,109 @@
       }
       renderTemplate(res, req, "botlist/vote.ejs", {req, roles, config, botdata});
     })
+
+
     app.post("/bot/:botID/vote", checkMaintence, checkAuth, async (req,res) => {
       const votes = require("./database/models/botlist/vote.js");
       let botdata = await botsdata.findOne({ botID: req.params.botID });
       let x = await votes.findOne({user: req.user.id,bot: req.params.botID})
-      if(x) return res.redirect("/error?code=400&message=You can vote every 12 hours.");
+      
+   
+        
+      if(x) 
+      {
+          var timeleft = await parseMilliseconds(x.ms - (Date.now() - x.Date));
+       var hour = timeleft.hours;
+       var minutes = timeleft.minutes;
+       var seconds = timeleft.seconds;
+        return res.redirect(`/error?code=400&message=You can vote in ${hour}h ${minutes}m.`);
+      }
       await votes.findOneAndUpdate({bot: req.params.botID, user: req.user.id }, {$set: {Date: Date.now(), ms: 43200000 }}, {upsert: true})
       await botsdata.findOneAndUpdate({botID: req.params.botID}, {$inc: {votes: 1}})
-      client.channels.cache.get(channels.votes).send(`**${req.user.username}** voted **${botdata.username}** **\`(${botdata.votes + 1} votes)\`**`)
+      let approveembed3 = new Discord.MessageEmbed()
+             .setTitle("Bot Voted")
+             .setDescription(`Bot: ${botdata.username}\n Voter: <@${req.user.username}> Votes: ${botdata.votes + 1}`)
+             .setFooter("Embed Logs of Administration")
+      client.channels.cache.get(channels.votes).send(approveembed3)
       return res.redirect(`/bot/${req.params.botID}/vote?success=true&message=You voted successfully. You can vote again after 12 hours.`);
-      renderTemplate(res, req, "botlist/vote.ejs", {req, roles, config, botdata});
+      var votedbot = client.users.cache.get(botdata.botID);
+      if(botdata.dcwebhook)
+      {
+      const webhook = require("webhook-discord");
+ 
+const Hook = new webhook.Webhook(botdata.dcwebhook);
+const msg = new webhook.MessageBuilder()
+.setName("Dumb bot list Discord Webhooks")
+.setAvatar("https://cdn.discordapp.com/avatars/849617280245432340/3b11b85c7054df0bcb444ed8480d3dbf.webp?size=4096")
+.setTitle(`${votedbot.username} Has just been Voted!!`)
+.setDescription(`Voter: ${req.user.username} Bot: ${votedbot.username} Total Votes: ${botdata.votes + 1}`)
+.setFooter(`Discord Default Webhook`)
+Hook.send(msg);
+      }
+      if(botdata.webhook)
+      { 
+        
+        const fetch = require("node-fetch");
+        fetch(botdata.webhook, {
+   method: "POST",
+   headers: {
+    "Content-Type": "application/json",
+   },
+   body: JSON.stringify({
+     "user": `${req.user.username}`,
+     "bot": `${votedbot.username}`,
+     "votes": `${botdata.votes + 1}`
+     }),
+  })
+      }
+      renderTemplate(res, req, "botlist/vote.ejs", {req, roles, config, botdata, db});
     })
+
+
+
+  app.get("/bot/:botID/test", checkMaintence, checkAuth, async (req, res) => {
+     let rBody = req.body;
+      let botdata = await botsdata.findOne({ botID: req.params.botID });
+       var votedbot = client.users.cache.get(botdata.botID);
+      if(req.user.id === botdata.ownerID && (botdata.webhook || botdata.dcwebhook))
+      { 
+             if(botdata.dcwebhook)
+      {
+      const webhook = require("webhook-discord");
+ 
+const Hook = new webhook.Webhook(botdata.dcwebhook);
+const msg = new webhook.MessageBuilder()
+.setName("Dumb bot list Discord Webhooks")
+.setAvatar("https://cdn.discordapp.com/avatars/849617280245432340/3b11b85c7054df0bcb444ed8480d3dbf.webp?size=4096")
+.setTitle(`${votedbot.username} Has just been Voted!!`)
+.setDescription(`Voter: ${req.user.username} Bot: ${votedbot.username} Total Votes: ${botdata.votes + 1}`)
+.setFooter(`Discord Default Webhook`)
+Hook.send(msg);
+      }
+      if(botdata.webhook)
+      { 
+        
+        const fetch = require("node-fetch");
+        fetch(botdata.webhook, {
+   method: "POST",
+   headers: {
+    "Content-Type": "application/json",
+   },
+   body: JSON.stringify({
+     "user": `${req.user.username}`,
+     "bot": `${votedbot.username}`,
+     "votes": `${botdata.votes + 1}`
+     }),
+  })
   
+      }
+
+      res.redirect(`https:/dumbbotlist.tk/bot/${req.params.botID}?success=true&message=Your bot Webhook has been successfully tested by the system.&botID=${req.params.botID}`) 
+      }else {
+        return res.redirect("/");
+      }
+      
+  })
     app.post("/addbot", checkMaintence, checkAuth, async (req,res) => {
     
     let rBody = req.body;
@@ -418,10 +525,72 @@
       }
       })
       client.users.fetch(rBody['botID']).then(a => {
-      client.channels.cache.get(channels.botlog).send(`<@${req.user.id}> added **${a.tag}**`)
+        let approveembed2 = new Discord.MessageEmbed()
+             .setTitle("Bot Added")
+             .setDescription(`Bot: ${a.username}\n Owner: <@${req.user.username}>`)
+             .setFooter("Embed Logs of Administration")
+      client.channels.cache.get(channels.botlog).send(approveembed2)
       res.redirect(`?success=true&message=Your bot has been successfully added to the system.&botID=${rBody['botID']}`)
       })
     })
+//------------------- CODE SHARE  -------------------//
+    app.get("/code/:code", checkMaintence, checkAuth, async (req, res) => {
+        let kod = req.params.code;
+        let koddata = await codesSchema.findOne({
+            code: kod
+        })
+        if (!koddata) return res.redirect('/codes?error=true&message=You entered an invalid code.')
+        if (!client.guilds.cache.get(config.server.id).members.cache.get(req.user.id)) return res.redirect("/error?code=403&message=To do this, you have to join our discord server.");
+        if (koddata.codeCategory == "javascript") {
+            if (!client.guilds.cache.get(config.server.id).members.cache.get(req.user.id).roles.cache.get(config.server.roles.codeshare.javascript)) return res.redirect("/error?code=403&message=You is not competent to do this.");
+        }
+        if (koddata.codeCategory == "html") {
+            if (!client.guilds.cache.get(config.server.id).members.cache.get(req.user.id).roles.cache.get(config.server.roles.codeshare.html)) return res.redirect("/error?code=403&message=You is not competent to do this.");
+        }
+        if (koddata.codeCategory == "subs") {
+            if (!client.guilds.cache.get(config.server.id).members.cache.get(req.user.id).roles.cache.get(config.server.roles.codeshare.altyapilar)) return res.redirect("/error?code=403&message=You is not competent to do this.");
+        }
+        if (koddata.codeCategory == "5invites") {
+            if (!client.guilds.cache.get(config.server.id).members.cache.get(req.user.id).roles.cache.get(config.server.roles.codeshare.besdavet)) return res.redirect("/error?code=403&message=You is not competent to do this.");
+        }
+        if (koddata.codeCategory == "10invites") {
+            if (!client.guilds.cache.get(config.server.id).members.cache.get(req.user.id).roles.cache.get(config.server.roles.codeshare.ondavet)) return res.redirect("/error?code=403&message=You is not competent to do this.");
+        }
+        if (koddata.codeCategory == "15invites") {
+            if (!client.guilds.cache.get(config.server.id).members.cache.get(req.user.id).roles.cache.get(config.server.roles.codeshare.onbesdavet)) return res.redirect("/error?code=403&message=You is not competent to do this.");
+        }
+        if (koddata.codeCategory == "20invites") {
+            if (!client.guilds.cache.get(config.server.id).members.cache.get(req.user.id).roles.cache.get(config.server.roles.codeshare.yirmidavet)) return res.redirect("/error?code=403&message=You is not competent to do this.");
+        }
+        if (koddata.codeCategory == "bdfd") {
+            if (!client.guilds.cache.get(config.server.id).members.cache.get(req.user.id).roles.cache.get(rconfig.server.roles.codeshare.bdfd)) return res.redirect("/error?code=403&message=You is not competent to do this.");
+        }
+        renderTemplate(res, req, "codeshare/codeview.ejs", {
+            req,
+            roles,
+            config,
+            koddata
+        });
+    })
+    app.get("/codes", checkMaintence, checkAuth, async (req, res) => {
+        let data = await codesSchema.find()
+        renderTemplate(res, req, "codeshare/codes/codes.ejs", {
+            req,
+            roles,
+            config,
+            data,
+        });
+    })
+    app.get("/codes/:type", checkMaintence, checkAuth, async (req, res) => {
+        let data = await codesSchema.find()
+        renderTemplate(res, req, "codeshare/codes/codelist.ejs", {
+            req,
+            roles,
+            config,
+            data,
+        });
+    })
+    //------------------- CODE SHARE  -------------------//
 
     app.get("/bot/:botID", checkMaintence, async (req,res,next) => {
       let botdata = await botsdata.findOne({botID: req.params.botID});
@@ -492,20 +661,27 @@
           github: rBody['github'],
           website: rBody['website'],
           support: rBody['support'],
-          coowners: String(rBody['coowners']).split(','),
+          coowners:(rBody['coowners']).split(','),
           backURL: rBody['background'],
+          webhook: rBody['webhook'],
+           dcwebhook: rBody['dcwebhook'],
       }
      }, function (err,docs) {})
       client.users.fetch(req.params.botID).then(a => {
-      client.channels.cache.get(channels.botlog).send(`<@${req.user.id}> edited **${a.tag}**`)
+          let edited = new Discord.MessageEmbed()
+             .setTitle("Bot Edited")
+             .setDescription(`Bot: ${a.username}\n Owner: <@${req.user.id}>`)
+             .setFooter("Embed Logs of Administration")
+      client.channels.cache.get(channels.botlog).send(edited)
       res.redirect(`?success=true&message=Your bot has been successfully edited.&botID=${req.params.botID}`)
       })
     })
   
     app.get("/bot/:botID/delete", async (req, res) => {
+   
         let botdata = await botsdata.findOne({ botID: req.params.botID })
         if(req.user.id === botdata.ownerID || botdata.coowners.includes(req.user.id)) {
-          let guild = client.guilds.cache.get(config.server.id).members.cache.get(botdata.botID);
+          let guild = client.guilds.cache.get(config.server.id).member(botdata.botID);
           await botsdata.deleteOne({ botID: req.params.botID, ownerID: botdata.ownerID })
           return res.redirect(`/user/${req.user.id}?success=true&message=Bot succesfully deleted.`)
 
@@ -531,7 +707,11 @@
           new appsdata({botID: rBody['bot'], future: rBody['future']}).save();
           res.redirect("/bots?success=true&message=Certificate application applied.&botID="+rBody['bot'])
           let botdata = await botsdata.findOne({ botID: rBody['bot'] })
-          client.channels.cache.get(channels.botlog).send(`User **${req.user.username}** requested a certificate for her bot named **${botdata.username}**.`)
+            let approveembed1 = new Discord.MessageEmbed()
+             .setTitle("Bot Certification")
+             .setDescription(`Bot: ${botdata.username}\n Owner: <@${botdata.ownerID}>`)
+             .setFooter("Embed Logs of Administration")
+          client.channels.cache.get(channels.botlog).send(approveembed1)
       });
       //
       this.client = client;
@@ -560,8 +740,16 @@
     
       app.get("/admin", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
       const botdata = await botsdata.find()
-      const udata = await uptimedata.find()
-      renderTemplate(res, req, "admin/index.ejs", {req, roles, config, botdata, udata})
+        const codedata = await codesSchema.find()
+        const udata = await uptimedata.find()
+        renderTemplate(res, req, "admin/index.ejs", {
+            req,
+            roles,
+            config,
+            codedata,
+            botdata,
+            udata
+        })
       });
       // MINI PAGES
       app.get("/admin/unapproved", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
@@ -583,26 +771,47 @@
       app.get("/admin/confirm/:botID", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
           const botdata = await botsdata.findOne({ botID: req.params.botID })
           if(!botdata) return res.redirect("/error?code=404&message=You entered an invalid bot id.");
+          if(botdata.status === "Approved")
+          {
+             return res.redirect("/error?code=404&message=This bot ia already approved.");
+          }
           await botsdata.findOneAndUpdate({botID: req.params.botID},{$set: {
               status: "Approved",
               Date: Date.now(),
           }
          }, function (err,docs) {})
          client.users.fetch(req.params.botID).then(bota => {
-              client.channels.cache.get(channels.botlog).send(`<@${botdata.ownerID}>'s bot named **${bota.tag}** has been approved.`)
-              client.users.fetch(botdata.ownerID).send(`Your bot named **${bota.tag}** has been approved.`)
+           let approveembed = new Discord.MessageEmbed()
+             .setTitle("Bot Approved")
+             .setDescription(`Moderator: ${req.user.username}\n Bot: ${bota.username}\n Owner: <@${botdata.ownerID}>`)
+             .setFooter("Embed Logs of Administration")
+              client.channels.cache.get(channels.botlog).send(approveembed)
+              if(client.users.cache.get(botdata.ownerID))
+              {
+              client.users.cache.get(botdata.ownerID).send(`Your bot named **${bota.tag}** has been approved.`)
+              }
          });
-         let guild = client.guilds.cache.get(config.server.id)
-         guild.members.cache.get(botdata.botID).roles.add(config.roles.botlist.bot);
-         guild.members.cache.get(botdata.ownerID).roles.add(config.roles.botlist.developer);
-         if(botdata.coowners) {
-           
+         let guild = client.guilds.cache.get(config.server.id);
+         if(guild.member(botdata.botID))
+         {
+         let bot = guild.member(botdata.botID);
+        bot.roles.add(botrole)
+         }
+         if(guild.member(botdata.ownerID))
+         {
+         let owner = guild.member(botdata.ownerID);
+         owner.roles.add(devrole);
+         }
+         if(parseInt(botdata.coowners)) {
+         
              botdata.coowners.map(a => {
-               if(guild.members.cache.get(a))
+              
+               if(guild.members.fetch(a))
                {
-                 return;
+                 
+              let coowner = guild.member(a);
+              coowner.roles.add(devrole);
                }
-               guild.members.cache.get(a).roles.add(roles.botlist.developer);
              })
          }
          return res.redirect(`/admin/unapproved?success=true&message=Bot approved.`)
@@ -612,8 +821,8 @@
           const botdata = await botsdata.findOne({ botID: req.params.botID })
           if(!botdata) return res.redirect("/error?code=404&message=You entered an invalid bot id.");
           let guild = client.guilds.cache.get(config.server.id)
-          guild.members.cache.get(botdata.botID).roles.remove(roles.bot);
-          await guild.members.cache.get(botdata.botID).kick();
+          guild.member(botdata.botID).roles.remove(botrole);
+          await guild.member(botdata.botID).kick();
           await botsdata.deleteOne({ botID: req.params.botID, ownerID: botdata.ownerID })
           return res.redirect(`/admin/approved?success=true&message=Bot deleted.`)
        });
@@ -627,8 +836,15 @@
           let rBody = req.body;
      	  let botdata = await botsdata.findOne({ botID: req.params.botID });
            client.users.fetch(botdata.ownerID).then(sahip => {
-               client.channels.cache.get(channels.botlog).send(`<@${botdata.ownerID}>'s bot named **${botdata.username}** has been declined. `)
+             let declineembed = new Discord.MessageEmbed()
+             .setTitle("Bot Declined")
+             .setDescription(`Reason: ${rBody['reason']}\n Moderator: ${req.user.username}\n Bot: ${botdata.username}\n Owner: <@${botdata.ownerID}>`)
+             .setFooter("Embed Logs of Administration")
+               client.channels.cache.get(channels.botlog).send(declineembed)
+               if(client.guilds.cache.get(config.server.id).member(botdata.ownerID))
+               {
                client.users.cache.get(botdata.ownerID).send(`Your bot named **${botdata.username}** has been declined.\nReason: **${rBody['reason']}**\nAuthorized: **${req.user.username}**`)
+               }
           })
           await botsdata.deleteOne({ botID: req.params.botID, ownerID: botdata.ownerID })
           return res.redirect(`/admin/unapproved?success=true&message=Bot declined.`)
@@ -645,19 +861,30 @@
           }
          }, function (err,docs) {})
          let botdata = await botsdata.findOne({ botID: req.params.botID });
-  
+          
           client.users.fetch(botdata.botID).then(bota => {
               client.channels.cache.get(channels.botlog).send(`<@${botdata.ownerID}>'s bot named **${bota.tag}** has been granted a certificate.`)
+              if(client.guilds.cache.get(config.server.id).member(botdata.ownerID))
+              {
               client.users.cache.get(botdata.ownerID).send(`Your bot named **${bota.tag}** has been certified.`)
+              }
           });
           await appsdata.deleteOne({ botID: req.params.botID })
           let guild = client.guilds.cache.get(config.server.id)
-          guild.members.cache.get(botdata.botID).roles.add(config.roles.botlist.certified_bot);
-          guild.members.cache.get(botdata.ownerID).roles.add(config.roles.botlist.certified_developer);
+          if(guild.member(botdata.botID))
+          {
+          let botto = guild.member(botdata.botID);
+          botto.roles.add(certirole);
+          }
+          if(guild.member(botdata.ownerID))
+          {
+          let owneri = guild.member(botdata.ownerID);
+          owneri.roles.add(certidevrole);
+          }
           if(botdata.coowners) {
               botdata.coowners.map(a => {
                 if(guild.members.cache.get(a)) {
-                guild.members.cache.get(a).roles.add(roles.botlist.certified_developer);
+                guild.members.cache.get(a).roles.add(certidevrole);
                 }
               })
           }
@@ -675,14 +902,25 @@
           }
          }, function (err,docs) {})
          let botdata = await botsdata.findOne({ botID: req.params.botID });
-          client.users.fetch(botdata.botID).then(bota => {
-              client.channels.cache.get(channels.botlog).send(`<@${botdata.ownerID}>'s bot named **${bota.tag}** has not been granted a certificate.`)
+         
+          client.users.cache.get(botdata.botID).then(bota => {
+              client.channels.cache.get(channels.botlog).send(`<@${botdata.ownerID}>'s bot named **${bota.tag}** has been decline for a certificate.`)
+              if(client.servers.cache.get(botdata.ownerID))
+              {
               client.users.cache.get(botdata.ownerID).send(`Your bot named **${bota.tag}** certificate application has been declined.\nReason: **${rBody['reason']}**`)
+              }
           });
           await appsdata.deleteOne({ botID: req.params.botID })
+          
           let guild = client.guilds.cache.get(config.server.id)
+          if(guild.members.fetch(botdata.botID))
+          {
           guild.members.cache.get(botdata.botID).roles.remove(roles.botlist.certified_bot);
+          }
+          if(guild.members.fetch(botdata.ownerID))
+          {
           guild.members.cache.get(botdata.ownerID).roles.remove(roles.botlist.certified_developer);
+          }
           return res.redirect(`/admin/certificate-apps?success=true&message=Certificate deleted.`)
        });
   
@@ -768,23 +1006,138 @@
          })
          let x = client.guilds.cache.get(config.server.id).members.cache.get(req.body.ownerID)
          if(x) {
-           x.roles.add(roles.profile.partnerRole)
+           x.roles.add(config.roles.profile.partnerRole)
          }
          return res.redirect('/admin/partners?success=true&message=Partner added.')
       });
+        // CODE SHARE
+    app.get("/admin/codes", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
+        let koddata = await codesSchema.find();
+        renderTemplate(res, req, "admin/codes.ejs", {
+            req,
+            roles,
+            config,
+            koddata
+        })
+    });
+    // ADDCODE
+    app.get("/admin/addcode", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
+        renderTemplate(res, req, "admin/addcode.ejs", {
+            req,
+            roles,
+            config
+        })
+    });
+    app.post("/admin/addcode", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
+        const rBody = req.body;
+        let kod = makeid(5);
+        await new codesSchema({
+            code: kod,
+            codeName: rBody['codename'],
+            codeCategory: rBody['category'],
+            codeDesc: rBody['codedesc'],
+        }).save()
+        if (rBody['main']) {
+            await codesSchema.updateOne({
+                code: kod
+            }, {
+                $set: {
+                    main: req.body.main
+                }
+            });
+        }
+        if (rBody['commands']) {
+            await codesSchema.updateOne({
+                code: kod
+            }, {
+                $set: {
+                    commands: req.body.commands
+                }
+            });
+        }
+        client.channels.cache.get(channels.codelog).send(new Discord.MessageEmbed()
+            .setTitle("New code added!").setColor("GREEN").setFooter(config.footer)
+            .setDescription(`The user named **[${req.user.username}](https://vcodes.xyz/user/${req.user.id})** added the code named **${rBody['codename']}** to the system.`)
+            .addField("Code Link", `https://vcodes.xyz/code/${kod}`, true)
+            .addField("Code Description", rBody['codedesc'], true)
+            .addField("Code Category", rBody['category'], true)
+        )
+        res.redirect('/code/' + kod)
+    });
+
+    // EDITCODE
+    app.get("/admin/editcode/:code", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
+        let kod = req.params.code;
+        let koddata = await codesSchema.findOne({
+            code: kod
+        })
+        if (!koddata) return res.redirect('/codes?error=true&message=You entered an invalid code.')
+        renderTemplate(res, req, "admin/editcode.ejs", {
+            req,
+            roles,
+            config,
+            koddata
+        })
+    });
+    app.post("/admin/editcode/:code", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
+        const rBody = req.body;
+        let kod = req.params.code;
+        await codesSchema.findOneAndUpdate({
+            code: kod
+        }, {
+            $set: {
+                codeName: rBody['codename'],
+                codeCategory: rBody['category'],
+                codeDesc: rBody['codedesc'],
+                main: rBody['main'],
+                commands: rBody['commands'],
+            }
+        }, function(err, docs) {})
+        client.channels.cache.get(channels.codelog).send(new Discord.MessageEmbed()
+            .setTitle("Code edited!").setColor("GREEN").setFooter(config.footer)
+            .setDescription(`The user named **[${req.user.username}](https://vcodes.xyz/user/${req.user.id})** edited the code named **${rBody['codename']}**.`)
+            .addField("Code Link", `https://vcodes.xyz/code/${kod}`, true)
+            .addField("Code Description", rBody['codedesc'], true)
+            .addField("Code Category", rBody['category'], true)
+        )
+        res.redirect('/code/' + kod)
+    });
+    // DELETECODE
+    app.get("/admin/deletecode/:code", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
+        await codesSchema.deleteOne({
+            code: req.params.code
+        })
+        return res.redirect('/admin/codes?error=true&message=Code deleted.');
+    });
       //---------------- ADMIN ---------------\\
   
     //------------------- PROFILE -------------------//
     
     const profiledata = require("./database/models/profile.js");
-    app.get("/user/:userID", checkMaintence, async (req, res) => {
-      client.users.fetch(req.params.userID).then(async a => {
-      const pdata = await profiledata.findOne({userID: a.id});
-      const botdata = await botsdata.find()
-      const member = a;
-      const uptimecount = await uptimedata.find({userID: a.id});
-      renderTemplate(res, req, "profile/profile.ejs", {member, req, roles, config, uptimecount, pdata, botdata});
-      });
+      app.get("/user/:userID", checkMaintence, async (req, res) => {
+        client.users.fetch(req.params.userID).then(async a => {
+            let codecount = await codesSchema.find({
+                sharer: a.id
+            })
+            const pdata = await profiledata.findOne({
+                userID: a.id
+            });
+            const botdata = await botsdata.find()
+            const member = a;
+            const uptimecount = await uptimedata.find({
+                userID: a.id
+            });
+            renderTemplate(res, req, "profile/profile.ejs", {
+                member,
+                req,
+                roles,
+                config,
+                codecount,
+                uptimecount,
+                pdata,
+                botdata
+            });
+        });
     });
     app.get("/user/:userID/edit", checkMaintence, checkAuth, async (req, res) => {
       client.users.fetch(req.user.id).then(async member => {
@@ -813,6 +1166,7 @@
     app.get("/api", async (req, res) => {
       res.json({ "Hello": "World", "Template by": "dumbbotlist.tk"});
     });
+     
     app.get("/api/bots/:botID", async (req, res) => {
       const botinfo = await botsdata.findOne({ botID: req.params.botID })
       if(!botinfo) return res.json({ "error": "You entered invalid bot id."})
@@ -835,6 +1189,7 @@
       website: botinfo.website,
       });
     });
+    
     app.get("/api/bots/check/:userID", async (req, res) => {
         let token = req.header('Authorization');
         if(!token) return res.json({"error": "You must enter a bot token."})
@@ -848,13 +1203,20 @@
             res.json({ voted: false });
         }
     });
+
     app.post("/api/bots/stats", async (req, res) => {
         let token = req.header('Authorization');
         if(!token) return res.json({"error": "You must enter a bot token."})
         const botdata = await botsdata.findOne({ token: token })
         if(!botdata) return res.json({"error": "You enter an invalid bot token."})
+        let count = req.header('serverCount');
+        if(count)
+        {
+          return res.json({"error": "You must enter a Servers Count."})
+        }
         if(botdata) {
-            return await botsdata.update({botID: botdata.botID},{$set:{ serverCount: req.header('serverCount') }})
+             await botsdata.update({botID: botdata.botID},{$set:{ serverCount: req.header('serverCount') }})
+             return res.json({"status": "Successfully Posted"})
         }
     });
     //------------------- API -------------------//    //------------------- API -------------------//

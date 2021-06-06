@@ -53,32 +53,32 @@
             </div>
         </div>
         <script>
-            var urlParams = new URLSearchParams(window.location.search);
-            if(urlParams.has('success') && urlParams.get('success')){
-            Swal.fire({
-             icon: 'success',
-             title: 'Succesfull...',
-             closeOnConfirm: false,
-             text: urlParams.get('message'),
-             footer: 'Copyright 2021  Dbl - All right reserved.'
-            }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = `/admin/approved`;
-          }
-        })
-            }
-            if(urlParams.has('error') && urlParams.get('error')){
-            Swal.fire({
-             icon: 'error',
-             title: 'Oops...',
-             text: urlParams.get('message'),
-             footer: 'Copyright 2021 Dumbbotlist.tk - All right reserved.'
-            }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = '/admin/approved';
-          }    
-        })
-            }
-           </script>
+    var urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('success') && urlParams.get('success')){
+    Swal.fire({
+     icon: 'success',
+     title: 'Successful...',
+     closeOnConfirm: false,
+     text: urlParams.get('message'),
+     footer: 'Copyright 2021 Dumbbotlist.tk - All right reserved.'
+    }).then((result) => {
+  if (result.isConfirmed) {
+    window.location.href = `/bot/${urlParams.get('botID')}`;
+  }
+})
+    }
+    if(urlParams.has('error') && urlParams.get('error')){
+    Swal.fire({
+     icon: 'error',
+     title: 'Oops...',
+     text: urlParams.get('message'),
+     footer: 'Copyright 2021 Dumbbotlist.tk - All right reserved.'
+    }).then((result) => {
+  if (result.isConfirmed) {
+    window.location.href = `/bot/${urlParams.get('botID')}/edit`;
+  }    
+})
+    }
+   </script>
         </div></div>
         <%- include('static/foot.ejs', { bot,user,path}) %>

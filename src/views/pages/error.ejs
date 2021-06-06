@@ -1,9 +1,9 @@
 <%- include('../parts/head', {bot, user,path}) %>
 <%
-var url = new URL(`https://hypertown.fun/error?code=${req.query.code}&message=${req.query.message}`);
+var url = new URL(`https://dumbbotlist.tk/error?code=${req.query.code}&message=${req.query.message}`);
 var params = new URLSearchParams(url.search);
 %>
-<title>Error <%= params.get('code')%> - Hyper Tôwn</title>
+<title>Error <%= params.get('code')%> - Dumb Town</title>
 </head>
 <style>
 .four_zero_four_bg{
@@ -45,7 +45,7 @@ var params = new URLSearchParams(url.search);
 
 <center>
 <% if(params.get('code') == "200") {%>
-    <p class="has-text-white">You are authorized? <a class="btn btn-discord" href="/login">Login</a></p>
+    <p class="has-text-white">You are In Server try logging in again? <a class="btn btn-discord" href="/login">Login</a></p>
 <% } %>
 </center>
 

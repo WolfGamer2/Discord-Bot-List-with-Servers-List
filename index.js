@@ -8,6 +8,9 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 client.htmll = require('cheerio');
 
+
+
+
 /*=======================================================================================*/
 
 
@@ -42,10 +45,12 @@ client.on('message', async message => {
 
 /*=======================================================================================*/
 client.on('ready',async () => {
+
+
     console.log("(!) Bot successfully connected to discord.");
     let botsSchema = require("./src/database/models/botlist/bots.js");
     const bots = await botsSchema.find();
-    client.user.setPresence({ activity: { type: 'WATCHING', name: 'Soon!! | '+bots.length+' bots' }, status: "dnd" });
+    client.user.setPresence({ activity: { type: 'WATCHING', name: 'dumbbotlist.tk | '+bots.length+' bots' }, status: "idle" });
 })
 /*=======================================================================================*/
 
@@ -61,7 +66,7 @@ const claudette = require("./src/database/models/uptime.js")
                 fetch(docs.link).catch()
             })
         })
-    }, 300000)
+    }, 10000)
 
 client.on('guildMemberRemove', async member => {
     if(member.guild.id !== config.serverID) return
@@ -85,7 +90,7 @@ const votes = require('./src/database/models/botlist/vote.js')
                 if(süre > 0) return
                 await votes.findOneAndDelete({ bot: a.bot, user: a.user })
             })
-        }, 1500000)
+        }, 30000)
 })
 /*=======================================================================================*/
 
@@ -102,7 +107,11 @@ client.on('guildMemberRemove', async member => {
     })
 })
 client.on("guildMemberAdd", async (member) => {
+  
+
+   
   let guild = client.guilds.cache.get(config.serverID);
+  
   if (member.user.bot) {
     try {
       guild.member(member.id).roles.add(roles.bot);
@@ -119,5 +128,5 @@ client.on("guildMemberAdd", async (member) => {
 /*=======================================================================================*/
 require("./src/server.js")(client);
 require("./src/database/connect.js")(client);
-client.login("ODQ5NjE3MjgwMjQ1NDMyMzQw.YLdxwA.mdy9ba-2URUcQDGAAXhMpOG647U");
+client.login("ODQ5NjE3MjgwMjQ1NDMyMzQw.YLdxwA.jar8kQs9qV5t1xQqNJ9P9L9RDNY");
 /*=======================================================================================*/

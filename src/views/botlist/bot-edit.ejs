@@ -51,6 +51,22 @@
                     <input type="text" name="website" id="website" value="<%= botdata.website %>" class="form-control" placeholder=""/>
                 <% } %>
               </div>
+                 <div class="form-group">
+                <label><i class="fab fa-google"></i> Vote Webhook</label>
+                <% if(!botdata.webhook) { %>
+                    <input type="text" name="webhook" id="webhook" class="form-control" placeholder=""/>
+                <% } else { %>
+                    <input type="text" name="webhook" id="webhook" value="<%= botdata.webhook %>" class="form-control" placeholder=""/>
+                <% } %>
+              </div>
+                   <div class="form-group">
+                <label><i class="fab fa-google"></i> Vote Discord Webhook</label>
+                <% if(!botdata.dcwebhook) { %>
+                    <input type="text" name="dcwebhook" id="dcwebhook" class="form-control" placeholder=""/>
+                <% } else { %>
+                    <input type="text" name="dcwebhook" id="dcwebhook" value="<%= botdata.dcwebhook %>" class="form-control" placeholder=""/>
+                <% } %>
+              </div>
               <div class="form-group">
                 <label><i class="fab fa-discord"></i> Support Server</label>
                 <% if(!botdata.support) { %>
@@ -67,11 +83,16 @@
                     <input type="text" name="github" id="github" value="<%= botdata.github %>" class="form-control" placeholder=""/>
                   <% } %>
               </div>
-              <div class="form-group">
+                 <div class="form-group">
                 <label><i class="fad fa-image"></i> Background Image</label>
-                  <input type="text" name="background" id="background" class="form-control" placeholder=""/>
+                <% if(!botdata.backURL) { %>
+                    <input type="text" name="background" id="background" class="form-control" placeholder=""/>
+                  <% } else { %>
+                    <input type="text" name="background" id="background" value="<%= botdata.backURL %>" class="form-control" placeholder=""/>
+                  <% } %>
               </div>
-          </div>
+            </div> 
+         
        <br>
           <div class="col-md-6">
             <div class="form-group">

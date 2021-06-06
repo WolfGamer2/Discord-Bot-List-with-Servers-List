@@ -92,6 +92,10 @@
                     <div class="box-2-p"><i class="mt-1 fad fa-pencil"></i></div>
                     <p class="box-2">Edit Bot</p>
                   </a>
+                    <a href="/bot/<%= botdata.botID %>/test" class="is-flex mt-1">
+                    <div class="box-2-p"><i class="mt-1 fad fa-pencil"></i></div>
+                    <p class="box-2">Test Webhook</p>
+                  </a>
                   <form action="#" id="my_form" method="POST">
                     <a href="javascript:{}" onclick="document.getElementById('my_form').submit();" class="is-flex mt-1">
                         <div class="box-2-p"><i class="fad fa-database is-size-6 mt-1"></i></div>
@@ -219,4 +223,31 @@
   </div>
   
   <br><br><br><br><br><br><br><br><br><br><br><br>
+  <script>
+      var urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('success') && urlParams.get('success')){
+    Swal.fire({
+     icon: 'success',
+     title: 'Successful...',
+     closeOnConfirm: false,
+     text: urlParams.get('message'),
+     footer: 'Copyright 2021 Dumbbotlist.tk - All right reserved.'
+    }).then((result) => {
+  if (result.isConfirmed) {
+    window.location.href = `/bot/${urlParams.get('botID')}`;
+  }
+})
+    }
+    if(urlParams.has('error') && urlParams.get('error')){
+    Swal.fire({
+     icon: 'error',
+     title: 'Oops...',
+     text: urlParams.get('message'),
+     footer: 'Copyright 2021 Dumbbotlist.tk - All right reserved.'
+    }).then((result) => {
+  if (result.isConfirmed) {
+    window.location.href = `/bot/${urlParams.get('botID')}/edit`;
+  }    
+})
+</script>
 <%- include('../parts/foot') %>

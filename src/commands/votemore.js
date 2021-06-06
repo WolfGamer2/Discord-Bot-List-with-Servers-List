@@ -6,9 +6,11 @@ const { Client, Util } = require('discord.js');
 const botsdata = require("../database/models/botlist/bots.js");
 const parseMilliseconds = require("parse-ms")
 module.exports = {
-  name: "vote",
-  aliases: ["v"],
+  name: "give-votes",
+  aliases: ["give"],
  run: async(client, message, args) => {
+   if(message.author.id === "720632216236851260")
+{
     var bot = message.mentions.users.first()
     if(bot)
     {
@@ -30,20 +32,14 @@ module.exports = {
         return message.channel.send("Not a bot");
       }
       let x = await votes.findOne({user: message.author.id,bot: bot.id})
-      if(x) {
-          var timeleft = await parseMilliseconds(x.ms - (Date.now() - x.Date));
-       var hour = timeleft.hours;
-       var minutes = timeleft.minutes;
-       var seconds = timeleft.seconds;
-   
-        return await message.channel.send(`You can vote again in ${hour}h ${minutes}m ${seconds}s`);
-      }
+  
       await votes.findOneAndUpdate({bot: bot.id, user: message.author.id }, {$set: {Date: Date.now(), ms: 43200000 }}, {upsert: true})
-      await botsdata.findOneAndUpdate({botID: bot.id}, {$inc: {votes: 1}})
-      client.channels.cache.get("849623735047946303").send(`**${message.author.username}** voted **${botdata.username}** **\`(${botdata.votes + 1} votes)\`**`)
+      await botsdata.findOneAndUpdate({botID: bot.id}, {$inc: {votes: args[1]}})
+     
       message.channel.send(`Done You have voted for <@${bot.id}>`)
     
 
+ }
  }
 }
 exports.conf = {
