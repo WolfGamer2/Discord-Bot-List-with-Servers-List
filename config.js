@@ -21,7 +21,8 @@ module.exports = {
                 booster: "849623732905443362",
                 sponsor: "849623732925366282",
                 supporter: "849623732888141872",
-                partnerRole: "849679589029707776"
+                partnerRole: "849679589029707776",
+                  ssitecreator: "8496237329253662890"
             },
              codeshare: {
                 javascript: "850738844792782858",
@@ -37,7 +38,9 @@ module.exports = {
                 developer: "849678998195929089",
                 certified_developer: "849678998195929089",
                 bot: "849677836516065280",
-                certified_bot: "849678582565568533"
+                certified_bot: "849678582565568533",
+                premium_bot: "852477474134949889",
+                 premium_developer: "852477474134949889"
             }
         },
     server: {
@@ -65,7 +68,9 @@ module.exports = {
                 developer: "849678998195929089",
                 certified_developer: "849678998195929089",
                 bot: "849677836516065280",
-                certified_bot: "849678582565568533"
+                certified_bot: "849678582565568533",
+                premium_bot: "852477474134949889",
+                 premium_developer: "852477474134949889"
             }
         },
         channels: {
@@ -104,7 +109,9 @@ module.exports = {
                 developer: "849678998195929089",
                 certified_developer: "849678998195929089",
                 bot: "849677836516065280",
-                certified_bot: "849678582565568533"
+                certified_bot: "849678582565568533",
+                premium_bot: "852477474134949889",
+                 premium_developer: "852477474134949889"
             }
         },
     bot: {
@@ -118,7 +125,10 @@ module.exports = {
         callback: "https://dumbbotlist.tk/callback",
         secret: "r1mXCFp08HBklNorIhHFOS_wJoC8d-zS",
         clientID: "849617280245432340",
-        tags: [ "Moderation", "Fun", "Minecraft","Economy","Guard","NSFW","Anime","Invite","Music","Logging", "Web Dashboard", "Reddit", "Youtube", "Twitch", "Crypto", "Leveling", "Game", "Roleplay", "Utility"]    
+        tags: [ "Moderation", "Fun", "Minecraft","Economy","Guard","NSFW","Anime","Invite","Music","Logging", "Web Dashboard", "Reddit", "Youtube", "Twitch", "Crypto", "Leveling", "Game", "Roleplay", "Utility"],
+        servers: {
+          tags: ["Fun", "NSFW", "Music", "Clan", "Youtube", "Officials", "Gaming", "Twitch", "Reddit", "Anime", "Community", "Minecraft", "Among Us", "BGMI", "PUBG", "Free Fire", "Apex Legends", "Valorant", "Support", "FanClub"]
+        }    
     },
 
     server: {
@@ -146,7 +156,9 @@ module.exports = {
                 developer: "849623732888141868",
                 certified_developer: "849623732888141870",
                 bot: "849623732871757860",
-                certified_bot: "849678582565568533"
+                certified_bot: "849678582565568533",
+                premium_bot: "852477474134949889",
+                 premium_developer: "852477474134949889"
             }
         },
         channels: {
@@ -165,6 +177,7 @@ channels: {
             uptimelog: "849623735047946303",
             botlog: "849623735047946303",
             votes: "849623735047946303"
-        }
+        },
+        testserver: "850949924145332244"
 
 }

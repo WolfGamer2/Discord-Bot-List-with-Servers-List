@@ -1,0 +1,73 @@
+<%- include('../../parts/head', {bot, user, path}) %>
+     <br><br>
+<div class="container">
+  <br><br>
+<div class="container contact-form bg-vote-vcodes">
+  <div class="contact-image">
+      <i></i>
+  </div>
+  <form method="post" class="form-discorddark">
+      <h3></h3>
+     <div class="row">
+          <div class="col-md-6">
+              <div class="form-group">
+                <label><i class="fad fa-database"></i> which package did you buy?</label>
+                <br>
+                <select name="onehundred" id="onehundred" required>
+                    <option value="Package 1" selected>Package 1</option>
+                    <option value="Package 2">Package 2</option>
+                </select>    
+              </div>
+              <br>
+              <div class="form-group">
+                  <label>did you have permission from your parents/guardians to pay?, or else.....</label>
+                  <textarea type="text" id="future" name="future" style="width: 100%;"></textarea>
+            </div>
+            <br>
+              <div class="form-group">
+                <label><i class="fad fa-robot"></i> Choose your bot
+                </label>
+                <br>
+                <select name="bot" id="bot" required>
+                  <% userbots.filter(a => a.premium == "None" || !a.date).map(a => {%>
+                    <option value="<%= a.botID %>"><%= a.username %></option>
+                 <% }); %>
+              </select>
+            </div>
+          </div>
+      </div>
+      <br><br><br><br>
+      <button type="submit" name="btnSubmit" class="btn btn-primary"><i class="fad fa-save"></i> Submit</button>
+  </form>
+</div>
+</div>
+<br><br>
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('success') && urlParams.get('success')){
+    Swal.fire({
+     icon: 'success',
+     title: 'Succesfull...',
+     closeOnConfirm: false,
+     text: urlParams.get('message'),
+     footer: 'Copyright 2021 &copy clydebots - All right reserved.'
+    }).then((result) => {
+  if (result.isConfirmed) {
+    window.location.href = `/bot/${urlParams.get('botID')}`;
+  }
+})
+    }
+    if(urlParams.has('error') && urlParams.get('error')){
+    Swal.fire({
+     icon: 'error',
+     title: 'Oops...',
+     text: urlParams.get('message'),
+     footer: 'Copyright 2021 &copy clydebots - All right reserved.'
+    }).then((result) => {
+  if (result.isConfirmed) {
+    window.location.href = '/addbot';
+  }    
+})
+    }
+   </script>
+<%- include('../../parts/foot') %>

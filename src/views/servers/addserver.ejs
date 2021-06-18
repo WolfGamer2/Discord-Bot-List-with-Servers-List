@@ -1,0 +1,123 @@
+<%- include('../parts/head', {bot, user, path}) %>
+     <br><br>
+<div class="container">
+  <br><br>
+<div class="container contact-form">
+  <div class="contact-image">
+      <i></i>
+  </div>
+  <script>
+        $(function() {
+        var txt = $("input#serverID");
+        var func = function() {
+            txt.val(txt.val().replace(/\s/g, ''));
+        }
+        txt.keyup(func).blur(func);
+    });
+  </script>
+  <%= _token %>
+  <form method="POST">
+    <input type="hidden" value="<%= _token %>" name="_token" id="_token">
+
+      <h3></h3>
+     <div class="row">
+          <div class="col-md-6">
+              <div class="form-group">
+               <label><i class="fad fa-fingerprint"></i> Server ID (It is generated automatically)<span style="color: rgb(175, 22, 22)">*</span></label>
+                  <input type="text" name="serverID" id="serverID" class="form-control" placeholder="849623732871757854" value="<%=guild%>" required="required" disabled/>
+              </div>
+              <div class="form-group">
+                  <label><i class="fad fa-crown"></i> Owner ID (It is generated automatically)<span style="color: rgb(175, 22, 22)">*</span></label>
+                  <input type="text" name="ownerID" id="ownerID" class="form-control" placeholder="Bot Sahibi" value="<%= user.id %>" required="required" disabled/>
+              </div>
+              <div class="form-group">
+                <label><i class="fad fa-users"></i> Co-Owners <small style="font-size: 12px;" class="title_divider_text">id1,id2,id3</small></label>
+                <input type="text" name="coowners" id="coowners" class="form-control" placeholder="id,id2,id3,id4,id5"/>
+              </div>
+              <div class="form-group">
+                <label><i class="fad fa-terminal"></i> Invite Link<span style="color: rgb(175, 22, 22)">*</span></label>
+                  <input type="text" name="invitelink" id="invitelink" class="form-control" placeholder="discord.gg/dumbbotlist" required="required"/>
+              </div>
+              <div class="form-group">
+                <label><i class="fab fa-google"></i> Website</label>
+                  <input type="text" name="website" id="website" class="form-control" placeholder=""/>
+              </div>
+              
+          
+              <div class="form-group">
+                <label><i class="fad fa-image"></i> Background Image</label>
+                  <input type="text" name="background" id="background" class="form-control" placeholder=""/>
+              </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label><i class="fad fa-text"></i> Short Description<span style="color: rgb(175, 22, 22)">*</span></label>
+              <input name="shortDesc" id="shortDesc" class="form-control" placeholder="Short Description" maxlength="300" required="required">
+          </div>
+              <div class="form-group">
+                <label><i class="fad fa-texts"></i> Long Description<span style="color: rgb(175, 22, 22)">*</span></label>
+                  <textarea name="longDesc" id="longDesc" class="form-control" placeholder="HTML supported." minlength="300" required="required" style="width: 100%; height: 300px;"></textarea>
+              </div>
+              <div class="form-group">
+                <label><i class="fad fa-tags"></i> Tags<span style="color: rgb(175, 22, 22)">*</span></label>
+                <select name="tags" id="tags" multiple required>
+                  <% config.website.servers.tags.map(a => {%>
+                    <option value="<%= a %>"><%= a %></option>
+                 <% }); %>
+              </select>
+            </div>
+            </div>
+      </div>
+      <br><br>
+
+<script src='https://www.google.com/recaptcha/api.js'></script>
+
+
+
+
+
+
+
+      <p class="text-muted">Spaces with <span style="color: rgb(175, 22, 22)">*</span> next to it are required.</p>
+    
+      <div class="g-recaptcha" data-sitekey="6Lfq7CQbAAAAAGDEUgdopP3-q24O-iO0Zqx85uy3"></div><br>
+      
+      <br/>
+    
+    
+      
+      <button type="submit" name="btnSubmit" class="btn btn-primary"><i class="fad fa-save"></i> Submit</button>
+    
+  </form>
+</div>
+</div>
+<br><br>
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('success') && urlParams.get('success')){
+    Swal.fire({
+     icon: 'success',
+     title: 'Succesfull...',
+     closeOnConfirm: false,
+     text: urlParams.get('message'),
+     footer: 'Copyright 2021  dumbbotlist.tk - All right reserved.'
+    }).then((result) => {
+  if (result.isConfirmed) {
+    window.location.href = `/server/${urlParams.get('serverID')}`;
+  }
+})
+    }
+    if(urlParams.has('error') && urlParams.get('error')){
+    Swal.fire({
+     icon: 'error',
+     title: 'Oops...',
+     text: urlParams.get('message'),
+     footer: 'Copyright 2021  dumbbotlist.tk - All right reserved.'
+    }).then((result) => {
+  if (result.isConfirmed) {
+    window.location.href = '/addserver/<%-guild%>';
+  }    
+})
+    }
+   </script>
+<%- include('../parts/foot') %>

@@ -1,0 +1,93 @@
+<%- include('../parts/head', {bot, user, path}) %>
+<%- include('./section') %>
+    <div class="container">
+        <div class="column">
+            <p class="has-text-white title is-large"><i class="fa fa-server has-text-info"></i>&nbsp;Servers</p>
+          
+          </div>
+    <div class="columns is-multiline is-desktop is-variable is-7 mt-5 pt-5">
+<% user.guilds.forEach(guild => {
+      const permsOnGuild = new perms(guild.permissions);
+      if(!permsOnGuild.has("MANAGE_GUILD")) return;
+  %>
+  <% const a = db.fetch(`guilddata_${guild.id}`); %>
+
+      <div class="col-md-6 col-lg-4 pb-3">
+        <div data-aos="fade-left">
+        <div class="card vcodes-card-custom bg-vcodes border-white border-0">
+          
+          <div class="vcodes-card-custom-avatar">
+    
+              <div class="card" style="max-width: 18rem; margin: 2rem; min-width: 10em;">
+    <%- guild.icon ? `<img src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}" class="card-img-top" style="max-width: 18rem;">` : "" %> </div>
+   
+          </div>
+          <div class="card-body">
+         
+               <h4 translate="no" class="card-title"><%= guild.name %></h4>
+            
+            <% if(a && bot.guilds.cache.get(guild.id)) { %>
+            <p translate="no" class="card-text vCodesbotDesc"><%= a %></p>
+         </div>
+          <div class="card-footer">
+            <a href="/server/<%=guild.id%>" class="btn btn-tag btn-bot">View</a>
+             <a href="/server/edit/<%=guild.id%>" class="btn btn-tag btn-bot">Edit</a>
+          </div>
+          <% } if(bot.guilds.cache.get(guild.id)  && !a) { %>
+<p translate="no" class="card-text vCodesbotDesc">Bot Added In the Server So You can Add Now</p>
+          </div>
+          <div class="card-footer">
+            <a href="/serveradd/<%-guild.id%>" class="btn btn-tag btn-bot">Add This Server</a>
+            
+          </div>
+          <% } else if(!a) { %> 
+
+            <p translate="no" class="card-text vCodesbotDesc">Bot Not Added In the Server</p>
+         </div>
+          <div class="card-footer">
+            <a href="https://discord.com/oauth2/authorize?client_id=849617280245432340&permissions=93185&scope=bot" class="btn btn-tag btn-bot">Add Bot</a>
+            
+          </div>
+          <% } %>
+        </div>
+        </div>
+      </div>
+      
+             <% }) %>
+        
+         </div>
+</div>
+
+<br><br>
+
+    </div>
+
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('success') && urlParams.get('success')){
+    Swal.fire({
+     icon: 'success',
+     title: 'Succesfull...',
+     closeOnConfirm: false,
+     text: urlParams.get('message'),
+     footer: 'Copyright 2021 dumbbotlist.tk - All right reserved.'
+    }).then((result) => {
+  if (result.isConfirmed) {
+    window.location.href = `/server/${urlParams.get('botID')}`;
+  }
+})
+    }
+    if(urlParams.has('error') && urlParams.get('error')){
+    Swal.fire({
+     icon: 'error',
+     title: 'Oops...',
+     text: urlParams.get('message'),
+     footer: 'Copyright 2021 dumbbotlist.tk - All right reserved.'
+    }).then((result) => {
+  if (result.isConfirmed) {
+    window.location.href = '/addbot';
+  }    
+})
+    }
+   </script>
+<%- include('../parts/foot') %>

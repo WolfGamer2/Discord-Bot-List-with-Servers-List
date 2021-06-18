@@ -7,7 +7,9 @@ module.exports = {
   name: "bot-decline",
   aliases: ["decline", "delete"],
  run: async(client, message, args) => {
-   if(message.member.roles.cache.has("849653061893750824") || message.member.roles.cache.has("849653292769869855"))
+    let guild1 = client.guilds.cache.get(config.server.id)
+   let member1 = guild1.member(message.author.id);
+   if(member1.roles.cache.has("849653061893750824") || member1.roles.cache.has("849653292769869855"))
 {
  var certirole = config.roles.botlist.certified_bot;
     var botrole = config.roles.botlist.bot;
@@ -47,6 +49,10 @@ module.exports = {
     }
       var reason = args.join(" ")
     .replace(args[0], "");
+    if(!reason)
+    {
+      return message.channel.send("Reason not given");
+    }
            client.users.fetch(botdata.ownerID).then(sahip => {
              let declineembed = new Discord.MessageEmbed()
              .setTitle("Bot Declined")
@@ -56,11 +62,11 @@ module.exports = {
                if(client.guilds.cache.get(config.server.id).members.fetch(botdata.ownerID))
                {
                client.users.cache.get(botdata.ownerID).send(`Your bot named **${botdata.username}** has been declined.\nReason: **${reason}**\nAuthorized: **${message.author.username}**`)
-               sahip.kick()
-                  botsdata.deleteOne({ botID: bot.id, ownerID: botdata.ownerID })
+               
+                  botsdata.deleteOne({ botID: bot.id, ownerID: botdata.ownerID, botid: bot.id })
                }
            })
-                let guild = client.guilds.cache.get(config.server.id);
+                let guild = client.guilds.cache.get(config.testserver);
         var bot = guild.member(botdata.botID)
         bot.kick()
          

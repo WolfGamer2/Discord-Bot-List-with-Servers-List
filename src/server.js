@@ -18,11 +18,17 @@
   const cookieParser = require('cookie-parser');
   const referrerPolicy = require('referrer-policy');
   app.use(referrerPolicy({ policy: "strict-origin" }))
+  const ms = require("parse-ms");
   // MODELS
+   const profiledata = require("./database/models/profile.js");
   const botsdata = require("./database/models/botlist/bots.js");
+  const serversdata = require("./database/models/servers/server.js");
+  const bumpsdata = require("./database/models/servers/bump.js");
   const voteSchema = require("./database/models/botlist/vote.js");
   const uptimeSchema = require("./database/models/uptime.js");
   const banSchema = require("./database/models/site-ban.js");
+    const ipbanSchema = require("./database/models/site-ipban.js");
+  const userPremium = require("./database/models/site-premium.js");
   const maintenceSchema = require('./database/models/bakim.js');
 const codesSchema = require("./database/models/codes.js");
   module.exports = async (client) => {
@@ -73,7 +79,8 @@ const codesSchema = require("./database/models/codes.js");
       path: req.path,
       _token: req.session['_token'],
       user: req.isAuthenticated() ? req.user : null,
-      global: config
+      global: config,
+      pdata1: userPremium
     };
     res.render(path.resolve(`${templateDir}${path.sep}${template}`), Object.assign(baseData, data));
     };
@@ -116,8 +123,11 @@ const codesSchema = require("./database/models/codes.js");
        return result.join('');
     }
     
+ var ipgeoblock = require("node-ipgeoblock");
 
-
+   
+    
+     
    app.get("/login", (req, res, next) => {
       if (req.session.backURL) {
         req.session.backURL = req.session.backURL; 
@@ -132,17 +142,55 @@ const codesSchema = require("./database/models/codes.js");
       next();
     },
     passport.authenticate("discord", { prompt: 'none' }));
-    app.get("/callback", passport.authenticate("discord", { failureRedirect: "/error?code=999&message=We encountered an error while connecting." }), async (req, res) => {
+  
+  app.get("/callback", passport.authenticate("discord", { failureRedirect: "/error?code=999&message=We encountered an error while connecting." }), async (req, res) => {
+      var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || null;
+      let banned2 = await ipbanSchema.findOne({user: ip})
+      
+        if(banned2){
+          if(banned2.user = ip) {
+            req.session.destroy(() => {
+             return res.json({ 
+              "Type ban": "Permanently Banned", 
+              "Banned By": banned2.bannedby+'#'+banned2.tagg,
+              "IP Adress": banned2.user
+            });
+             req.logout();
+             });
+          }
+        }else{
+          
+        }
         let banned = await banSchema.findOne({user: req.user.id})
         if(banned) {
+          const datum =  new Date().toLocaleString();
+          var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || null;
+           const ipdata = require("./database/models/ipadress.js");
+           let register1 = await ipdata.findOne({ipv4: await ip}, { _id: false });
+           if (!register1){
+            ipdata({ userID: req.user.id, ipv4: await ip, username: req.user.username, tag: req.user.discriminator, time: datum}).save()
+          }
         client.users.fetch(req.user.id).then(async a => {
-        client.channels.cache.get(channels.login).send(new Discord.MessageEmbed().setAuthor(a.username, a.avatarURL({dynamic: true})).setThumbnail(a.avatarURL({dynamic: true})).setColor("RED").setDescription(`[**${a.username}**#${a.discriminator}](https://dumbbotlist.tk/user/${a.id}) User named ** site ** tried to log in but could not log in because he/she was blocked from the site.`).addField("Username", a.username).addField("User ID", a.id).addField("User Discriminator", a.discriminator))
+        client.channels.cache.get(channels.login).send(new Discord.MessageEmbed().setAuthor(a.username, a.avatarURL({dynamic: true})).setThumbnail(a.avatarURL({dynamic: true})).setColor("RED").setDescription(`[**${a.username}**#${a.discriminator}](https://dumbbotlist.tk/user/${a.id}) banned user tried to connect.`).addField("Username", a.username).addField("User ID", a.id).addField("User Discriminator", a.discriminator))
         })
         req.session.destroy(() => {
-        res.json({ login: false, message: "You have been blocked from Dumb Town.", logout: true })
+         res.redirect(`/banned?code=${banned.bannedby} have you banned from dumb bots official&message=Reason: ${banned.sebep}`) 
         req.logout();
         });
         } else {
+          const datum =  new Date().toLocaleString();
+          var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || null;
+           const ipdata = require("./database/models/ipadress.js");
+           let register1 = await ipdata.findOne({ipv4: await ip}, { _id: false });
+           if (!register1){
+            ipdata({ userID: req.user.id, ipv4: await ip, username: req.user.username, tag: req.user.discriminator, time: datum}).save()
+          }
+          const profile1 = require("./database/models/profile.js");
+          let register = await profile1.findOne({userID: req.user.id}, { _id: false });
+          if (!register){
+            profiledata({ userID: req.user.id, banned: false, paid: false}).save()
+          }
+          
             try {
               const request = require('request');
               request({
@@ -154,11 +202,12 @@ const codesSchema = require("./database/models/codes.js");
         } catch {};
         res.redirect(req.session.backURL || '/')
         client.users.fetch(req.user.id).then(async a => {
-        client.channels.cache.get(channels.login).send(new Discord.MessageEmbed().setAuthor(a.username, a.avatarURL({dynamic: true})).setThumbnail(a.avatarURL({dynamic: true})).setColor("GREEN").setDescription(`[**${a.username}**#${a.discriminator}](https://dumbbotlist.tk/user/${a.id}) User logged into the site.`).addField("Username", a.username).addField("User ID", a.id).addField("User Discriminator", a.discriminator))
+        client.channels.cache.get(channels.login).send(new Discord.MessageEmbed().setAuthor(a.username, a.avatarURL({dynamic: true})).setThumbnail(a.avatarURL({dynamic: true})).setColor("GREEN").setDescription(`[**${a.username}**#${a.discriminator}](https://dumbbotlist.tk/user/${a.id}) welcome to our bot list`).addField("Username", a.username).addField("User ID", a.id).addField("User Discriminator", a.discriminator))
         
         })
         }
     });
+  
     app.get("/logout", function (req, res) {
       req.session.destroy(() => {
         req.logout();
@@ -199,6 +248,41 @@ const codesSchema = require("./database/models/codes.js");
         const db = new Database(path.join(__dirname, './database/json/partners.json'));
       renderTemplate(res, req, "partners.ejs", {roles, config, db});
     }); 
+      app.get("/founders", checkMaintence, (req, res) => {
+        const Database = require("void.db");
+        const db = new Database(path.join(__dirname, './database/json/team.json'));
+      renderTemplate(res, req, "team.ejs", {roles, config, db});
+    }); 
+    app.get("/team", checkMaintence, (req, res) => {
+      const Database = require("void.db");
+      const db = new Database(path.join(__dirname, './database/json/team.json'));
+    renderTemplate(res, req, "team.ejs", {roles, config, db});
+  });
+   app.get("/banned", (req, res) => {
+      renderTemplate(res, req, "pages/banned.ejs", {req, config, res, roles, channels});
+});
+   
+    app.get("/news", checkMaintence, (req, res) => {
+    const Database = require("void.db");
+    const db = new Database(path.join(__dirname, './database/json/news.json'));
+  renderTemplate(res, req, "news.ejs", {roles, config, db});
+  });
+   // app.get("/news-read/:id", checkMaintence, (req, res)  => {
+  //   const Database = require("void.db");
+  //   const db = new Database(path.join(__dirname, './database/json/news.json'));
+  //    db.fetch({
+  //     news: {
+  //             id: req.params.id
+  //     }
+  // })
+  // renderTemplate(res, req, "news-read.ejs", {roles, config, db});
+  // });
+  app.get("/privacy", checkMaintence, (req, res) => {
+      renderTemplate(res, req, "/privacy/privacy.ejs", {config,roles});
+    });
+    app.get("/terms", checkMaintence, (req, res) => {
+      renderTemplate(res, req, "/privacy/terms.ejs", {config,roles});
+    });
     app.get("/bot-rules", checkMaintence, (req, res) => {
       renderTemplate(res, req, "/botlist/bot-rules.ejs", {config,roles});
     });
@@ -219,7 +303,24 @@ const codesSchema = require("./database/models/codes.js");
 
   
   
-    
+     app.get("/bots/premium", checkMaintence, async (req,res) => {
+          let page = req.query.page || 1;
+          let x = await botsdata.find()
+          let data = x.filter(b => b.premium === "Premium")
+          //if(page < 1) return res.redirect(`/bots`);
+          if(data.length <= 0) return res.redirect("/");
+          if((page > Math.ceil(data.length / 6)))return res.redirect(`/bots`);
+          if (Math.ceil(data.length / 6) < 1) {
+              page = 1;
+          };
+          renderTemplate(res, req, "botlist/bots-premium.ejs", {
+              req,
+              roles,
+              config,
+              data,
+              page: page
+          });
+        })
     //------------------- UPTİME -------------------//
     const uptimedata = require("./database/models/uptime.js");
     app.get("/uptime/add", checkMaintence, checkAuth, async (req,res) => {
@@ -304,17 +405,55 @@ const codesSchema = require("./database/models/codes.js");
               page: page
           });
         })
-        app.get("/search", checkMaintence, async (req,res) => {
+        app.get("/bots/verified", checkMaintence, async (req,res) => {
           let page = req.query.page || 1;
           let x = await botsdata.find()
-          let data = x.filter(a => a.status == "Approved" && a.username.includes(req.query.q) || a.shortDesc.includes(req.query.q))
+          let data = x.filter(b => b.status === "Approved")
           if(page < 1) return res.redirect(`/bots`);
           if(data.length <= 0) return res.redirect("/");
           if((page > Math.ceil(data.length / 6)))return res.redirect(`/bots`);
           if (Math.ceil(data.length / 6) < 1) {
               page = 1;
           };
+          renderTemplate(res, req, "botlist/bots-verified.ejs", {
+              req,
+              roles,
+              config,
+              data,
+              page: page
+          });
+        })
+        app.get("/search", checkMaintence, async (req,res) => {
+          let page = req.query.page || 1;
+          let x = await botsdata.find()
+          let data = x.filter(a => a.status == "Approved" && a.username.includes(req.query.q) || a.shortDesc.includes(req.query.q))
+         
+          if(page < 1) return res.redirect(`/bots`);
+          if(data.length <= 0) return res.redirect("/error?code=404&message=No Bots Found with that Name");
+          if((page > Math.ceil(data.length / 6)))return res.redirect(`/bots`);
+          if (Math.ceil(data.length / 6) < 1) {
+              page = 1;
+          };
           renderTemplate(res, req, "botlist/search.ejs", {
+              req,
+              roles,
+              config,
+              data,
+              page: page
+          });
+        })
+         app.get("/servers/search", checkMaintence, async (req,res) => {
+          let page = req.query.page || 1;
+          let x = await serversdata.find()
+          let data = x.filter(a => a.status == "Approved" && a.username.includes(req.query.q) || a.shortDesc.includes(req.query.q))
+         
+          if(page < 1) return res.redirect(`/servers`);
+          if(data.length <= 0) return res.redirect("/error?code=404&message=No Servers Found with that Name");
+          if((page > Math.ceil(data.length / 6)))return res.redirect(`/servers`);
+          if (Math.ceil(data.length / 6) < 1) {
+              page = 1;
+          };
+          renderTemplate(res, req, "servers/search.ejs", {
               req,
               roles,
               config,
@@ -329,12 +468,19 @@ const codesSchema = require("./database/models/codes.js");
                 config
             });
           })
+            app.get("/servers/tags", checkMaintence, async (req,res) => {
+            renderTemplate(res, req, "servers/tags.ejs", {
+                req,
+                roles,
+                config
+            });
+          })
         app.get("/tag/:tag", checkMaintence, async (req,res) => {
             let page = req.query.page || 1;
             let x = await botsdata.find()
             let data = x.filter(a => a.status == "Approved" && a.tags.includes(req.params.tag))
             if(page < 1) return res.redirect(`/tag/`+req.params.tag);
-            if(data.length <= 0) return res.redirect("/");
+            if(data.length <= 0) return res.redirect("/error?code=404&message=No Bots Found with that Tag");
             if((page > Math.ceil(data.length / 6)))return res.redirect(`/tag/`+req.params.tag);
             if (Math.ceil(data.length / 6) < 1) {
               page = 1;
@@ -347,13 +493,41 @@ const codesSchema = require("./database/models/codes.js");
                 page: page
             });
           })
+           app.get("/servers/tag/:tag", checkMaintence, async (req,res) => {
+            let page = req.query.page || 1;
+            let x = await serversdata.find()
+            let data = x.filter(a => a.status == "Approved" && a.tags.includes(req.params.tag))
+            if(page < 1) return res.redirect(`/servers/tag/`+req.params.tag);
+            if(data.length <= 0) return res.redirect("/error?code=404&message=No Servers Found with that Tag");
+            if((page > Math.ceil(data.length / 6)))return res.redirect(`/servers/tag/`+req.params.tag);
+            if (Math.ceil(data.length / 6) < 1) {
+              page = 1;
+            };
+            renderTemplate(res, req, "servers/tag.ejs", {
+                req,
+                roles,
+                config,
+                data,
+                page: page
+            });
+          })
     app.get("/addbot", checkMaintence, checkAuth, async (req,res) => {
-      if(!client.guilds.cache.get(config.server.id).members.fetch(req.user.id)) {
+      if(!client.users.cache.get(req.user.id)) {
         return res.redirect("/error?code=404&message=You Must be in Our Support Server to do this");
       }
       renderTemplate(res, req, "botlist/addbot.ejs", {req, roles, config});
     })
-
+app.get("/serveradd/:serverID", checkMaintence, checkAuth, async (req,res) => {
+  let guildcache = client.guilds.cache.get(config.server.id);
+      if(!guildcache.members.fetch(req.user.id)) {
+        return res.redirect("/error?code=404&message=You Must be in Our Support Server to do this");
+      }
+      if(!client.guilds.cache.get(req.params.serverID))
+      {
+        return res.redirect("/error?code=404&message=You Must Add Official Bot to do this");
+      }
+      renderTemplate(res, req, "servers/addserver.ejs", {req, roles, config, guild: req.params.serverID});
+    })
 
     app.get("/bot/:botID/vote", checkMaintence, async (req,res) => {
       let botdata = await botsdata.findOne({ botID: req.params.botID });
@@ -468,27 +642,176 @@ Hook.send(msg);
       }
       
   })
+   app.get("/server/:botID/vote", checkMaintence, async (req,res) => {
+      let botdata = await serversdata.findOne({ serverID: req.params.botID });
+      if(!botdata) return res.redirect("/error?code=404&message=You entered an invalid server id.");
+      if(req.user) {
+      if(!req.user.id === botdata.ownerID) {
+        if(botdata.status != "Approved") return res.redirect("/error?code=404&message=You entered an invalid server id.");
+      }
+      }
+      renderTemplate(res, req, "servers/vote.ejs", {req, roles, config, botdata});
+    })
+
+
+    app.post("/server/:botID/vote", checkMaintence, checkAuth, async (req,res) => {
+      const votes = require("./database/models/servers/vote.js");
+      let botdata = await serversdata.findOne({ serverID: req.params.botID });
+      let x = await votes.findOne({user: req.user.id,server: req.params.botID})
+      
+   
+        
+      if(x) 
+      {
+          var timeleft = await parseMilliseconds(x.ms - (Date.now() - x.Date));
+       var hour = timeleft.hours;
+       var minutes = timeleft.minutes;
+       var seconds = timeleft.seconds;
+        return res.redirect(`/error?code=400&message=You can vote in ${hour}h ${minutes}m.`);
+      }
+      await votes.findOneAndUpdate({server: req.params.botID, user: req.user.id }, {$set: {Date: Date.now(), ms: 43200000 }}, {upsert: true})
+      await serversdata.findOneAndUpdate({serverID: req.params.botID}, {$inc: {votes: 1}})
+      let approveembed3 = new Discord.MessageEmbed()
+             .setTitle("Server Voted")
+             .setDescription(`Server: ${botdata.username}\n Voter: <@${req.user.username}> Votes: ${botdata.votes + 1}`)
+             .setFooter("Embed Logs of Administration")
+      client.channels.cache.get(channels.votes).send(approveembed3)
+      return res.redirect(`/server/${req.params.botID}/vote?success=true&message=You voted successfully. You can vote again after 12 hours.`);
+      
+      if(botdata.dcwebhook)
+      {
+      const webhook = require("webhook-discord");
+ 
+const Hook = new webhook.Webhook(botdata.dcwebhook);
+const msg = new webhook.MessageBuilder()
+.setName("Dumb bot list Discord Webhooks")
+.setAvatar("https://cdn.discordapp.com/avatars/849617280245432340/3b11b85c7054df0bcb444ed8480d3dbf.webp?size=4096")
+.setTitle(`${votedbot.username} Has just been Voted!!`)
+.setDescription(`Voter: ${req.user.username} Bot: ${botdata.username} Total Votes: ${botdata.votes + 1}`)
+.setFooter(`Discord Default Webhook`)
+Hook.send(msg);
+      }
+      if(botdata.webhook)
+      { 
+        
+        const fetch = require("node-fetch");
+        fetch(botdata.webhook, {
+   method: "POST",
+   headers: {
+    "Content-Type": "application/json",
+   },
+   body: JSON.stringify({
+     "user": `${req.user.username}`,
+     "bot": `${botdata.username}`,
+     "votes": `${botdata.votes + 1}`
+     }),
+  })
+      }
+      renderTemplate(res, req, "servers/vote.ejs", {req, roles, config, botdata, db});
+    })
+
+
+
+  app.get("/server/:botID/test", checkMaintence, checkAuth, async (req, res) => {
+     let rBody = req.body;
+      let botdata = await serversdata.findOne({ serverID: req.params.botID });
+      
+      if(req.user.id === botdata.ownerID && (botdata.webhook || botdata.dcwebhook))
+      { 
+             if(botdata.dcwebhook)
+      {
+      const webhook = require("webhook-discord");
+ 
+const Hook = new webhook.Webhook(botdata.dcwebhook);
+const msg = new webhook.MessageBuilder()
+.setName("Dumb bot list Discord Webhooks")
+.setAvatar("https://cdn.discordapp.com/avatars/849617280245432340/3b11b85c7054df0bcb444ed8480d3dbf.webp?size=4096")
+.setTitle(`${botdata.username} Has just been Voted!!`)
+.setDescription(`Voter: ${req.user.username} Bot: ${botdata.username} Total Votes: ${botdata.votes + 1}`)
+.setFooter(`Discord Default Webhook`)
+Hook.send(msg);
+      }
+      if(botdata.webhook)
+      { 
+        
+        const fetch = require("node-fetch");
+        fetch(botdata.webhook, {
+   method: "POST",
+   headers: {
+    "Content-Type": "application/json",
+   },
+   body: JSON.stringify({
+     "user": `${req.user.username}`,
+     "bot": `${botdata.username}`,
+     "votes": `${botdata.votes + 1}`
+     }),
+  })
+  
+      }
+
+      res.redirect(`https:/dumbbotlist.tk/server/${req.params.botID}?success=true&message=Your bot Webhook has been successfully tested by the system.&botID=${req.params.botID}`) 
+      }else {
+        return res.redirect("/");
+      }
+      
+  })
     app.post("/addbot", checkMaintence, checkAuth, async (req,res) => {
-    
+       if(db.has(`don_${req.body.botID}`))
+       {
+         db.delete(`don_${req.body.botID}`)
+       }
+       if(db.has(`rate_${req.body.botID}`))
+       {
+         db.delete(`rate_${req.body.botID}`);
+       }
+       if(db.has(`presence_${req.body.botID}`))
+       {
+         db.delete(`presence_${req.body.botID}`);
+       }
     let rBody = req.body;
+      if(req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
+     return res.redirect('/error?code=404&message=Invalid Catcha.');
+  }
+  // Put your secret key here.
+  var secretKey = "6Lfq7CQbAAAAANpKPhjVt1P7QkBbq3XcGE-fcStT";
+  // req.connection.remoteAddress will provide IP address of connected user.
+  var verificationUrl = "https://www.google.com/recaptcha/api/siteverify?secret=" + secretKey + "&response=" + req.body['g-recaptcha-response'] + "&remoteip=" + req.connection.remoteAddress;
+  // Hitting GET request to the URL, Google will respond with success or error scenario.
+  var request = require('request');
+  request(verificationUrl,function(error,response,body) {
+    body = JSON.parse(body);
+    // Success will be true or false depending upon captcha validation.
+    if(body.success !== undefined && !body.success) {
+      return res.redirect('/error?code=404&message=Invalid Catcha.');
+    }
+    
+  });
+
+
       client.users.fetch(req.body.botID).then(async a => {
       
       let botvarmi = await botsdata.findOne({botID: req.body.botID});
       if(botvarmi) return res.redirect('/error?code=404&message=The bot you are trying to add exists in the system.');
       if(!a.bot)
-      { console.log("ik")
+      { 
         return res.redirect("/error?code=404&message=You entered an invalid bot id.");
       }
       if(!a)
       
       { 
-        console.log("idk")
+       
         return res.redirect("/error?code=404&message=You entered an invalid bot id.");
       }
       if(rBody['coowners']) {
           if(String(rBody['coowners']).split(',').length > 3) return res.redirect("?error=true&message=You can add up to 3 CO-Owners..")
           if(String(rBody['coowners']).split(',').includes(req.user.id)) return res.redirect("?error=true&message=You cannot add yourself to other CO-Owners.");
       }
+      var today = new Date();
+var dd = String(today.getDate()).padStart(2, '0');
+var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+var yyyy = today.getFullYear();
+
+today = mm + '/' + dd + '/' + yyyy;
       await new botsdata({
            botID: a.id,
            botid: a.id,  
@@ -505,6 +828,8 @@ Hook.send(msg);
            tags: rBody['tags'],
            certificate: "None",
            token: makeToken(24),
+           date: today,
+           premium: "None",
       }).save()
       if(rBody['background']) {
           await botsdata.findOneAndUpdate({botID: rBody['botID']},{$set: {backURL: rBody['background']}}, function (err,docs) {})
@@ -532,6 +857,94 @@ Hook.send(msg);
       client.channels.cache.get(channels.botlog).send(approveembed2)
       res.redirect(`?success=true&message=Your bot has been successfully added to the system.&botID=${rBody['botID']}`)
       })
+    })
+
+    app.post("/serveradd/:serverID", checkMaintence, checkAuth, async (req,res) => {
+      
+    let rBody = req.body;
+      if(req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
+     return res.redirect('/error?code=404&message=Invalid Catcha.');
+  }
+  // Put your secret key here.
+  var secretKey = "6Lfq7CQbAAAAANpKPhjVt1P7QkBbq3XcGE-fcStT";
+  // req.connection.remoteAddress will provide IP address of connected user.
+  var verificationUrl = "https://www.google.com/recaptcha/api/siteverify?secret=" + secretKey + "&response=" + req.body['g-recaptcha-response'] + "&remoteip=" + req.connection.remoteAddress;
+  // Hitting GET request to the URL, Google will respond with success or error scenario.
+  var request = require('request');
+  request(verificationUrl,function(error,response,body) {
+    body = JSON.parse(body);
+    // Success will be true or false depending upon captcha validation.
+    if(body.success !== undefined && !body.success) {
+      return res.redirect('/error?code=404&message=Invalid Catcha.');
+    }
+    
+  });
+
+
+      let a = client.guilds.cache.get(req.params.serverID)
+      
+      let botvarmi = await serversdata.findOne({serverID: req.params.serverID});
+      if(botvarmi) return res.redirect('/error?code=404&message=The server you are trying to add exists in the system.');
+    
+      if(!a)
+      
+      { 
+       console.log("HM");
+       console.log(a);
+        return res.redirect("/error?code=404&message=You entered an invalid server id.");
+      }
+      if(rBody['coowners']) {
+          if(String(rBody['coowners']).split(',').length > 5) return res.redirect("?error=true&message=You can add up to 5 CO-Owners..")
+          if(String(rBody['coowners']).split(',').includes(req.user.id)) return res.redirect("?error=true&message=You cannot add yourself to other CO-Owners.");
+      }
+      var today = new Date();
+var dd = String(today.getDate()).padStart(2, '0');
+var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+var yyyy = today.getFullYear();
+
+today = mm + '/' + dd + '/' + yyyy;
+      await new serversdata({
+           serverID: a.id,
+           serverid: a.id,  
+           ownerID: req.user.id,
+           ownerName: req.user.usename,
+           coowners: rBody['coowners'],
+           username: a.name,
+           avatar: a.iconURL(),
+           invitelink: rBody['invitelink'],
+           longDesc: rBody['longDesc'],
+           shortDesc: rBody['shortDesc'],
+           status: "Approved",
+           tags: rBody['tags'],
+           certificate: "None",
+           date: today,
+           premium: "None",
+           users: a.members.cache.filter(member => !member.user.bot)
+                .size
+      }).save()
+      db.set(`guilddata_${a.id}`, rBody['shortDesc']);
+      if(rBody['background']) {
+          await serversdata.findOneAndUpdate({serverID: req.params.serverID},{$set: {backURL: rBody['background']}}, function (err,docs) {})
+      }
+      
+      if(rBody['website']) {
+          await botsdata.findOneAndUpdate({serverID: req.params.serverID},{$set: {website: rBody['website']}}, function (err,docs) {})
+      }
+     
+      if(rBody['coowners']) {
+          if(String(rBody['coowners']).split(',').length > 5) return res.redirect("?error=true&message=You can add up to 5 CO-Owners..")
+          if(String(rBody['coowners']).split(',').includes(req.user.id)) return res.redirect("?error=true&message=You cannot add yourself to other CO-Owners.");
+          await serversdata.findOneAndUpdate({serverID: req.params.serverID},{$set: { coowners: String(rBody['coowners']).split(',') }}, function (err,docs) {})
+      }
+      
+      
+        let approveembed2 = new Discord.MessageEmbed()
+             .setTitle("Server Added")
+             .setDescription(`Server: ${a.name}\n Owner: <@${req.user.username}>`)
+             .setFooter("Embed Logs of Administration")
+      client.channels.cache.get(channels.botlog).send(approveembed2)
+      res.redirect(`?success=true&message=Your server has been successfully added to the system.&serverID=${req.params.serverID}`)
+      
     })
 //------------------- CODE SHARE  -------------------//
     app.get("/code/:code", checkMaintence, checkAuth, async (req, res) => {
@@ -591,10 +1004,161 @@ Hook.send(msg);
         });
     })
     //------------------- CODE SHARE  -------------------//
+    app.get("/servers", checkMaintence, async(req, res, next) => {
+       let page = req.query.page || 1;
+            let data = await serversdata.find() || await serversdata.find().filter(b => b.status === "Approved")
+            if(page < 1) return res.redirect(`/servers`);
+            if(data.length <= 0) return res.redirect("/");
+            if((page > Math.ceil(data.length / 6)))return res.redirect(`/servers`);
+            if (Math.ceil(data.length / 6) < 1) {
+            page = 1;
+          };
+          let bumpdata = await bumpsdata.find();
+          renderTemplate(res, req, "servers/index.ejs", {
+              req,
+              roles,
+              config,
+              data,
+              page: page,
+              bumpdata,
+              serversdata
+          });
+    })
+     app.get("/servers/me", checkAuth, checkMaintence, async(req, res, next) => {
+      
+        
+             
+               
+               
+            
+                
+         renderTemplate(res, req, "servers/me.ejs", {
+             perms: Discord.Permissions,
+              req,
+              roles,
+              config,
+              serversdata,
+              db
+          });
+    })
+       app.get("/server/:botID", checkMaintence, async (req,res,next) => {
+       
+      let serverdata = await serversdata.findOne({serverID: req.params.botID});
+      if(!serverdata) return res.redirect("/error?code=404&message=You entered an invalid server id.");
+   
+   
+    
+      if(serverdata.status != "Approved") {
+        if(req.user.id == serverdata.ownerID || serverdata.coowners.includes(req.user.id)) {
+          
+          client.users.fetch(serverdata.ownerID).then(aowner => {
+          
+              renderTemplate(res, req, "servers/server.ejs", { req, config, serverdata, aowner, roles});
+          
+          });
+        } else {
+          res.redirect("/error?code=404&message=To edit this server, you must be one of its owners.");
+        }
+      } else {
+       
+       
+    
+        client.users.fetch(serverdata.ownerID).then(aowner => {
+       
+            renderTemplate(res, req, "servers/server.ejs", { req, config, serverdata, aowner, roles});
+      
+        });
+      }
+    });
+    app.post("/server/:botID", async (req,res) => {
+      let serverdata = await serversdata.findOne({serverID: req.params.botID});
+      
+          client.users.fetch(serverdata.ownerID).then(async owner => {
+          if(bot) {
+         
+          } else {
+          await botsdata.findOneAndDelete({ serverID: serverdata.botID })
+          }
+         
+        })
+        return res.redirect('/server/'+req.params.botID);
+    })
+
+    app.get("/server/:botID/edit", checkMaintence, checkAuth, async (req,res) => {
+      let serverdata = await serversdata.findOne({serverID: req.params.botID});
+      if(!serverdata) return res.redirect("/error?code=404&message=You entered an invalid server id.")
+      if(req.user.id == serverdata.ownerID || botdata.coowners.includes(req.user.id)) {
+        renderTemplate(res, req, "servers/server-edit.ejs", { req, config, serverdata, roles});
+      } else {
+        res.redirect("/error?code=404&message=To edit this server, you must be one of its owners.");
+      }
+    });
+  
+  
+    app.post("/server/:botID/edit", checkMaintence, checkAuth, async (req,res) => {
+      let rBody = req.body;
+      let botdata = await serversdata.findOne({ serverID: req.params.botID })
+      if(String(rBody['coowners']).split(',').length > 5) return res.redirect("?error=true&message=You can add up to 5 CO-Owners..")
+      if(String(rBody['coowners']).split(',').includes(req.user.id)) return res.redirect("?error=true&message=You cannot add yourself to other CO-Owners.");
+      await serversdata.findOneAndUpdate({serverID: req.params.botID},{$set: {
+          ownerID: botdata.ownerID,
+          longDesc: rBody['longDesc'],
+          shortDesc: rBody['shortDesc'],
+          tags: rBody['tags'],
+          website: rBody['website'],
+          coowners:(rBody['coowners']).split(','),
+          backURL: rBody['background'],
+          webhook: rBody['webhook'],
+           dcwebhook: rBody['dcwebhook'],
+      }
+     }, function (err,docs) {})
+      client.users.fetch(req.params.botID).then(a => {
+          let edited = new Discord.MessageEmbed()
+             .setTitle("Server Edited")
+             .setDescription(`Server: ${a.username}\n Owner: <@${req.user.id}>`)
+             .setFooter("Embed Logs of Administration")
+      client.channels.cache.get(channels.botlog).send(edited)
+      res.redirect(`?success=true&message=Your Server has been successfully edited.&serverID=${req.params.botID}`)
+      })
+    })
+  
+    app.get("/server/:botID/delete", async (req, res) => {
+   
+        let botdata = await serversdata.findOne({ serverID: req.params.botID })
+        if(req.user.id === botdata.ownerID) {
+          
+          const channeltolog = client.channels.cache.get(config.channels.botlog)
+          channeltolog.send(`${botdata.ownerID} has deleted Server  ${req.params.botID}`)
+          await serversdata.deleteOne({ serverID: req.params.botID, ownerID: botdata.ownerID })
+          return res.redirect(`/user/${req.user.id}?success=true&message=Server succesfully deleted.`)
+
+        } else {
+            return res.redirect("/error?code=404&message=You entered an invalid server id.");
+        }
+    })
+
 
     app.get("/bot/:botID", checkMaintence, async (req,res,next) => {
+       
       let botdata = await botsdata.findOne({botID: req.params.botID});
       if(!botdata) return res.redirect("/error?code=404&message=You entered an invalid bot id.");
+          var uptimerate = db.fetch(`rate_${req.params.botID}`);
+   
+   if(!uptimerate)
+      {
+             var uptimerate = "100";
+      }
+      if(uptimerate)
+      {
+      var uptimerate = `${uptimerate}`;
+      }
+    var uptime = ms(db.fetch(`timefr_${req.params.botID}`) - Date.now())
+    var upistime = {
+      days: uptime.days,
+      hours: uptime.hours,
+      minutes: uptime.minutes
+    };
+   
       if(botdata.status != "Approved") {
         if(req.user.id == botdata.ownerID || botdata.coowners.includes(req.user.id)) {
           let coowner = new Array()
@@ -603,7 +1167,7 @@ Hook.send(msg);
           })
           client.users.fetch(botdata.ownerID).then(aowner => {
           client.users.fetch(req.params.botID).then(abot => {
-              renderTemplate(res, req, "botlist/bot.ejs", { req, abot, config, botdata, coowner, aowner, roles});
+              renderTemplate(res, req, "botlist/bot.ejs", { req, abot, config, botdata, coowner, aowner, roles, uptimerate, upistime});
           });
           });
         } else {
@@ -614,9 +1178,10 @@ Hook.send(msg);
         botdata.coowners.map(a => {
             client.users.fetch(a).then(b => coowner.push(b))
         })
+    
         client.users.fetch(botdata.ownerID).then(aowner => {
         client.users.fetch(req.params.botID).then(abot => {
-            renderTemplate(res, req, "botlist/bot.ejs", { req, abot, config, botdata, coowner, aowner, roles});
+            renderTemplate(res, req, "botlist/bot.ejs", { req, abot, config, botdata, coowner, aowner, roles, uptimerate, upistime});
         });
         });
       }
@@ -682,6 +1247,8 @@ Hook.send(msg);
         let botdata = await botsdata.findOne({ botID: req.params.botID })
         if(req.user.id === botdata.ownerID || botdata.coowners.includes(req.user.id)) {
           let guild = client.guilds.cache.get(config.server.id).member(botdata.botID);
+          const channeltolog = client.channels.cache.get(config.channels.botlog)
+          channeltolog.send(`${botdata.ownerID} has deleted Bot  ${req.params.botID}`)
           await botsdata.deleteOne({ botID: req.params.botID, ownerID: botdata.ownerID })
           return res.redirect(`/user/${req.user.id}?success=true&message=Bot succesfully deleted.`)
 
@@ -753,12 +1320,12 @@ Hook.send(msg);
       });
       // MINI PAGES
       app.get("/admin/unapproved", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
-      const botdata = await botsdata.find()
-      renderTemplate(res, req, "admin/unapproved.ejs", {req, roles, config, botdata})
+      
+      renderTemplate(res, req, "admin/unapproved.ejs", {req, roles, config, botdata: await botsdata.find()})
       });
       app.get("/admin/approved", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
-          const botdata = await botsdata.find()
-          renderTemplate(res, req, "admin/approved.ejs", {req, roles, config, botdata})
+         
+          renderTemplate(res, req, "admin/approved.ejs", {req, roles, config, botdata: await botsdata.find()})
       });
       app.get("/admin/certificate-apps", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
           const botdata = await botsdata.find()
@@ -790,7 +1357,10 @@ Hook.send(msg);
               {
               client.users.cache.get(botdata.ownerID).send(`Your bot named **${bota.tag}** has been approved.`)
               }
+               let channel = client.channels.cache.get("850952052288520224");
+  channel.send(`The bot <@${bota.id}> Has been Approved And Sr Mods and Administrators Please add the bot here. Invite link - https://discord.com/oauth2/authorize?client_id=${bota.id}&permissions=0&scope=bot`)
          });
+         
          let guild = client.guilds.cache.get(config.server.id);
          if(guild.member(botdata.botID))
          {
@@ -823,7 +1393,7 @@ Hook.send(msg);
           let guild = client.guilds.cache.get(config.server.id)
           guild.member(botdata.botID).roles.remove(botrole);
           await guild.member(botdata.botID).kick();
-          await botsdata.deleteOne({ botID: req.params.botID, ownerID: botdata.ownerID })
+          await botsdata.deleteOne({ botID: req.params.botID, ownerID: botdata.ownerID, botid: req.params.botID, status: "UnApproved" })
           return res.redirect(`/admin/approved?success=true&message=Bot deleted.`)
        });
       // DECLINE BOT
@@ -846,7 +1416,7 @@ Hook.send(msg);
                client.users.cache.get(botdata.ownerID).send(`Your bot named **${botdata.username}** has been declined.\nReason: **${rBody['reason']}**\nAuthorized: **${req.user.username}**`)
                }
           })
-          await botsdata.deleteOne({ botID: req.params.botID, ownerID: botdata.ownerID })
+          await botsdata.deleteOne({ botID: req.params.botID, ownerID: botdata.ownerID, botid: req.params.botID, status: "UnApproved" })
           return res.redirect(`/admin/unapproved?success=true&message=Bot declined.`)
        });
 
@@ -892,8 +1462,8 @@ Hook.send(msg);
        });
        app.get("/admin/certificate/delete/:botID", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
           const botdata = await botsdata.findOne({ botID: req.params.botID })
-          if(!botdata) return res.redirect("/error?code=404&message=You entered an invalid bot id.");
-          renderTemplate(res, req, "admin/certificate-delete.ejs", {req, roles, config, botdata})
+         if(!botdata) return res.redirect("/error?code=404&message=You entered an invalid bot id.");
+         renderTemplate(res, req, "admin/certificate-delete.ejs", {req, roles, config, botdata})
        });
        app.post("/admin/certificate/delete/:botID", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
           let rBody = req.body;
@@ -903,11 +1473,11 @@ Hook.send(msg);
          }, function (err,docs) {})
          let botdata = await botsdata.findOne({ botID: req.params.botID });
          
-          client.users.cache.get(botdata.botID).then(bota => {
+          client.users.fetch(botdata.botID).then(bota => {
               client.channels.cache.get(channels.botlog).send(`<@${botdata.ownerID}>'s bot named **${bota.tag}** has been decline for a certificate.`)
               if(client.servers.cache.get(botdata.ownerID))
               {
-              client.users.cache.get(botdata.ownerID).send(`Your bot named **${bota.tag}** certificate application has been declined.\nReason: **${rBody['reason']}**`)
+              client.users.fetch(botdata.ownerID).send(`Your bot named **${bota.tag}** certificate application has been declined.\nReason: **${rBody['reason']}**`)
               }
           });
           await appsdata.deleteOne({ botID: req.params.botID })
@@ -915,11 +1485,11 @@ Hook.send(msg);
           let guild = client.guilds.cache.get(config.server.id)
           if(guild.members.fetch(botdata.botID))
           {
-          guild.members.cache.get(botdata.botID).roles.remove(roles.botlist.certified_bot);
+          guild.member(botdata.botID).roles.remove(roles.botlist.certified_bot);
           }
           if(guild.members.fetch(botdata.ownerID))
           {
-          guild.members.cache.get(botdata.ownerID).roles.remove(roles.botlist.certified_developer);
+          guild.member(botdata.ownerID).roles.remove(roles.botlist.certified_developer);
           }
           return res.redirect(`/admin/certificate-apps?success=true&message=Certificate deleted.`)
        });
@@ -936,10 +1506,248 @@ Hook.send(msg);
         return res.redirect('../admin/uptimes?error=true&message=Link deleted.');
       });
 
+      app.get("/premium", checkMaintence, checkAuth, async (req, res) => {
+        client.users.fetch(req.user.id).then(async a => {
+        const pdata = await profiledata.findOne({userID: a.id});
+        renderTemplate(res, req, "/botlist/apps/premium.ejs", {req, roles, config, pdata})
+      });
+    });
+     app.get("/addserver", checkMaintence, checkAuth, async (req, res) => {
+        client.users.fetch(req.user.id).then(async a => {
+        const pdata = await profiledata.findOne({userID: a.id});
+        renderTemplate(res, req, "servers/guide.ejs", {req, roles, config, pdata})
+      });
+    });
+     app.get("/premium/apply", checkMaintence, checkAuth, async (req, res) => {
+        const userbots = await botsdata.find({ ownerID: req.user.id })
+        client.users.fetch(req.user.id).then(async a => {
+          const pdata = await profiledata.findOne({userID: a.id});
+          if(pdata){
+            if(pdata.paid != true) {
+              res.redirect("/")
+            }
+          }else{
+            res.redirect("/")
+          }
+        renderTemplate(res, req, "/botlist/apps/premium-app.ejs", {req, roles, config, userbots, pdata})
+      });
+    });
       app.get("/admin/maintence", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
         if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
         let bandata = await banSchema.find();
         renderTemplate(res, req, "/admin/administrator/maintence.ejs", { req, roles, config, bandata })
+      });
+       app.post("/premium/apply", checkMaintence, checkAuth, async (req, res) => {
+        const rBody = req.body;
+        new appsdata({botID: rBody['bot'], future: rBody['future']}).save();
+        res.redirect("/bots?success=true&message=premium application applied.&botID="+rBody['bot'])
+        let botdata = await botsdata.findOne({ botID: rBody['bot'] })
+        client.channels.cache.get(channels.botlog).send(`**[System console]**\nUser **${req.user.username}** requested premium for her bot named **${botdata.username}**.`)
+    });
+      const checkOwner = async (req, res, next) => {
+        if (req.isAuthenticated()) {
+            if(client.guilds.cache.get(config.server.id).members.cache.get(req.user.id).roles.cache.get(roles.yonetici)) {
+                next();
+                } else {
+                res.redirect("/error?code=403&message=You is not competent to do this.")
+            }
+          } else {
+        req.session.backURL = req.url;
+        res.redirect("/login");
+        }
+        }
+          app.get("/admin/premium-apps", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        const botdata = await botsdata.find()
+        const apps = await appsdata.find()
+        renderTemplate(res, req, "admin/premium-apps.ejs", {req, roles, config, apps,botdata})
+    });
+    app.get("/admin/premium-bots", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+  const botdata = await botsdata.find();
+  renderTemplate(res, req, "admin/premium-bots.ejs", {req, roles, config, botdata})
+});
+app.get("/admin/premium/give/:botID", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+  await botsdata.findOneAndUpdate({botID: req.params.botID},{$set: {
+      premium: "Premium",
+  }
+ }, function (err,docs) {})
+ let botdata = await botsdata.findOne({ botID: req.params.botID });
+
+  client.users.fetch(botdata.botID).then(bota => {
+      client.channels.cache.get(channels.botlog).send(`**[System console]**\n<@${botdata.ownerID}>'s bot named **${bota.tag}** has been granted a premium.`)
+      client.users.cache.get(botdata.ownerID).send(`**[System console]**\nYour bot named **${bota.tag}** has been premium.`)
+  });
+  await appsdata.deleteOne({ botID: req.params.botID })
+  let guild = client.guilds.cache.get(config.server.id)
+  guild.members.cache.get(botdata.botID).roles.add(roles.botlist.premium_bot);
+  guild.members.cache.get(botdata.ownerID).roles.add(roles.botlist.premium_developer);
+  if(botdata.coowners) {
+      botdata.coowners.map(a => {
+        if(guild.members.cache.get(a)) {
+        guild.members.cache.get(a).roles.add(roles.botlist.premium_developer);
+        }
+      })
+  }
+  return res.redirect(`/admin/premium-apps?success=true&message=Certificate gived.&botID=${req.params.botID}`)
+});
+app.get("/admin/premium/delete/:botID", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+  const botdata = await botsdata.findOne({ botID: req.params.botID })
+  if(!botdata) return res.redirect("/error?code=404&message=You entered an invalid bot id.");
+  renderTemplate(res, req, "admin/premium-delete.ejs", {req, roles, config, botdata})
+});
+app.post("/admin/premium/delete/:botID", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+  let rBody = req.body;
+  await botsdata.findOneAndUpdate({botID: req.params.botID},{$set: {
+      premium: "None",
+  }
+ }, function (err,docs) {})
+ let botdata = await botsdata.findOne({ botID: req.params.botID });
+  client.users.fetch(botdata.botID).then(bota => {
+      client.channels.cache.get(channels.botlog).send(`**[System console]**\n<@${botdata.ownerID}>'s bot named **${bota.tag}** has not been granted a premium.`)
+      client.users.cache.get(botdata.ownerID).send(`**[System console]**\nYour bot named **${bota.tag}** premium application has been declined.\nReason: **${rBody['reason']}**`)
+  });
+  await appsdata.deleteOne({ botID: req.params.botID })
+  let guild = client.guilds.cache.get(config.server.id)
+  guild.members.cache.get(botdata.botID).roles.remove(roles.botlist.premium_bot);
+  guild.members.cache.get(botdata.ownerID).roles.remove(roles.botlist.premium_developer);
+  return res.redirect(`/admin/premium-apps?success=true&message=Certificate deleted.`)
+});
+ app.get("/admin/useripban", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        let banipdata = await ipbanSchema.find();
+        let userdata = await profiledata.find();
+        renderTemplate(res, req, "/admin/administrator/user-ipban.ejs", { req, roles, config, banipdata, userdata })
+      });
+      app.get("/admin/userpremium", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        let prdata = await userPremium.find();
+        let userdata = await profiledata.find();
+        renderTemplate(res, req, "/admin/administrator/user-premium.ejs", { req, roles, config, prdata, userdata })
+      });
+      app.post("/admin/userban", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        new banSchema({ user: req.body.userID, sebep: req.body.reason, yetkili: req.user.id, bannedby: req.user.username, tagg: req.user.discriminator }).save()
+        profiledata.findOneAndUpdate({userID: req.body.userID},{$set: { 
+          banned: true
+       }}, function (err,docs) {})
+        return res.redirect('../admin/userban?success=true&message=User banned.');
+      });
+      app.post("/admin/useripban", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        new ipbanSchema({ user: req.body.userID, sebep: req.body.reason, yetkili: req.user.id, bannedby: req.user.username, tagg: req.user.discriminator }).save()
+        return res.redirect('../admin/useripban?success=true&message=User banned.');
+      });
+      app.post("/admin/userpremium", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        new userPremium({ user: req.body.userID, sebep: req.body.reason, yetkili: req.user.id, bannedby: req.user.username, tagg: req.user.discriminator }).save()
+        profiledata.findOneAndUpdate({userID: req.body.userID},{$set: { 
+          paid: true
+       }}, function (err,docs) {})
+        return res.redirect('../admin/userpremium?success=true&message=User premium.');
+      });
+      app.post("/admin/userunpremium", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        //new profiledata({ userID: req.body.userID, paid: false}).save()
+        profiledata.findOneAndUpdate({userID: req.body.userID},{$set: { 
+          paid: false
+       }}, function (err,docs) {})
+        userPremium.deleteOne({ user: req.body.userID }, function (error, user) { 
+        if(error) console.log(error)
+        })
+        // profiledata.deleteOne({ userID: req.body.userID }, function (error, user) { 
+        //   if(error) console.log(error)
+        //   })
+        return res.redirect('../admin/userpremium?success=true&message=User premium removed.');
+      });
+      app.post("/admin/userunban", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        banSchema.deleteOne({ user: req.body.userID }, function (error, user) { 
+        if(error) console.log(error)
+        })
+        profiledata.findOneAndUpdate({userID: req.body.userID},{$set: { 
+          banned: false
+       }}, function (err,docs) {})
+        // profiledata.deleteOne({ userID: req.body.userID }, function (error, user) { 
+        //   if(error) console.log(error)
+        //   })
+        return res.redirect('../admin/userban?success=true&message=User ban removed.');
+      });
+      app.post("/admin/useripunban", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        ipbanSchema.deleteOne({ user: req.body.userID }, function (error, user) { 
+        if(error) console.log(error)
+        })
+        // profiledata.deleteOne({ userID: req.body.userID }, function (error, user) { 
+        //   if(error) console.log(error)
+        //   })
+        return res.redirect('../admin/useripban?success=true&message=User ban removed.');
+      });
+     app.get("/admin/team", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        const Database = require("void.db");
+        const db = new Database(path.join(__dirname, './database/json/team.json'));
+        renderTemplate(res, req, "/admin/administrator/team.ejs", { req, roles, config, db })
+      });
+       app.post("/admin/team", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        const Database = require("void.db");
+        const db = new Database(path.join(__dirname, './database/json/team.json'));
+         db.push(`team`, { 
+           code: createID(12), 
+           icon: req.body.icon,
+           ownerID: req.body.ownerID,
+           serverName: req.body.serverName,
+           color:  req.body.color,
+           rank:  req.body.rank,
+          //  website: `https://dumbbotlist.tk/user/${req.body.Website}`,
+           description: req.body.partnerDesc
+         })
+         let x = client.guilds.cache.get(config.server.id).members.cache.get(req.body.ownerID)
+         if(x) {
+           x.roles.add('848310229175500882')
+           client.users.cache.get(req.body.ownerID).send(`**[System console]**\nwelcome to our team <@${req.body.ownerID}>\nyour rank is: **${req.body.rank}**.`)
+         }
+         return res.redirect('/admin/team?success=true&message=Team added.')
+      });
+      //---------------- news ---------------\\
+      app.get("/admin/news", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        const Database = require("void.db");
+        const db = new Database(path.join(__dirname, './database/json/news.json'));
+        renderTemplate(res, req, "/admin/administrator/news.ejs", { req, roles, config, db })
+      });
+       app.post("/admin/news", checkMaintence, checkOwner, checkAuth, async (req, res) => {
+        if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
+        const Database = require("void.db");
+        const db = new Database(path.join(__dirname, './database/json/news.json'));
+        const datum =  new Date().toLocaleString();
+         db.push(`news`, { 
+           code: createID(12), 
+           icon: req.body.icon,
+           banner: req.body.banner,
+           ownerID: req.body.ownerID,
+           serverName: req.body.serverName,
+           color:  req.body.color,
+           rank:  req.body.rank,
+           date: datum,
+           description: req.body.partnerDesc
+         })
+         let rBody = req.body;
+        
+
+       const webhook = require("webhook-discord");
+  
+ const Hook = new webhook.Webhook("https://discordapp.com/api/webhooks/851207040247529532/j2MYjhSumvSYgWvcWi7VsVdytECmg8OXHM42UN1F-cEyjRPLpbvQIMJiQZrMyioEeh3j");
+ const msg = new webhook.MessageBuilder()
+ .setName('official news')
+ .setAvatar(req.body.icon)
+ .setTitle(req.body.serverName)
+ .setDescription(`<@${req.body.ownerID}> posted a news message\n\nLink:\n[website](https://dumbbotlist.tk/news)`)
+ .setFooter(`Copyright © dumbbotlist.tk official 2021`)
+ Hook.send(msg);
+
+       
+         return res.redirect('/admin/news?success=true&message=News added.')
+         
       });
       app.post("/admin/maintence", checkMaintence, checkAdmin, checkAuth, async (req, res) => {
         if(!config.bot.owners.includes(req.user.id)) return res.redirect('../admin');
@@ -1056,9 +1864,9 @@ Hook.send(msg);
             });
         }
         client.channels.cache.get(channels.codelog).send(new Discord.MessageEmbed()
-            .setTitle("New code added!").setColor("GREEN").setFooter(config.footer)
-            .setDescription(`The user named **[${req.user.username}](https://vcodes.xyz/user/${req.user.id})** added the code named **${rBody['codename']}** to the system.`)
-            .addField("Code Link", `https://vcodes.xyz/code/${kod}`, true)
+            .setTitle("New code added!").setColor("GREEN").setFooter("Code System")
+            .setDescription(`The user named **[${req.user.username}](https://dumbbotlist.tk/user/${req.user.id})** added the code named **${rBody['codename']}** to the system.`)
+            .addField("Code Link", `https://dumbbotlist.tk/code/${kod}`, true)
             .addField("Code Description", rBody['codedesc'], true)
             .addField("Code Category", rBody['category'], true)
         )
@@ -1095,7 +1903,7 @@ Hook.send(msg);
         }, function(err, docs) {})
         client.channels.cache.get(channels.codelog).send(new Discord.MessageEmbed()
             .setTitle("Code edited!").setColor("GREEN").setFooter(config.footer)
-            .setDescription(`The user named **[${req.user.username}](https://vcodes.xyz/user/${req.user.id})** edited the code named **${rBody['codename']}**.`)
+            .setDescription(`The user named **[${req.user.username}](https://dumbbotlist.tk/user/${req.user.id})** edited the code named **${rBody['codename']}**.`)
             .addField("Code Link", `https://vcodes.xyz/code/${kod}`, true)
             .addField("Code Description", rBody['codedesc'], true)
             .addField("Code Category", rBody['category'], true)
@@ -1127,6 +1935,7 @@ Hook.send(msg);
             const uptimecount = await uptimedata.find({
                 userID: a.id
             });
+            const serverdata = await serversdata.find()
             renderTemplate(res, req, "profile/profile.ejs", {
                 member,
                 req,
@@ -1135,7 +1944,8 @@ Hook.send(msg);
                 codecount,
                 uptimecount,
                 pdata,
-                botdata
+                botdata,
+                serverdata
             });
         });
     });
@@ -1210,13 +2020,98 @@ Hook.send(msg);
         const botdata = await botsdata.findOne({ token: token })
         if(!botdata) return res.json({"error": "You enter an invalid bot token."})
         let count = req.header('serverCount');
-        if(count)
+        if(!count)
         {
           return res.json({"error": "You must enter a Servers Count."})
         }
         if(botdata) {
              await botsdata.update({botID: botdata.botID},{$set:{ serverCount: req.header('serverCount') }})
+             if(req.header("users") )
+             {
+    await botsdata.update({botID: botdata.botID},{$set:{ users: req.header('users') }})
+             }
              return res.json({"status": "Successfully Posted"})
+        }
+    });
+     app.post("/api/private/bots/search", async (req, res) => {
+       let user = req.header("userid");
+       if(!user)
+       {
+         return res.json({"error": "You must enter a userid."})
+       }
+       let check = await profiledata.findOne({userID: user});
+       if(!check)
+       {
+         return res.json({"error": "You must enter a valid userid."})
+       }
+      
+       let token = req.header('Authorization');
+    
+       if(check.token !== token)
+       {
+          return res.json({"error": "You must enter a valid token."})
+       }
+      
+         let x = await botsdata.find()
+         if(req.header('tag'))
+         {
+          var data1 = await x.filter(a => 
+            a.status == "Approved" &&  a.tags.includes(req.header('tag')))
+         } else {
+
+           let count = req.header('name');
+        if(!count)
+        {
+          return res.json({"error": "You must enter a name to search."})
+        }
+          var data1 = await x.filter(a => a.status == "Approved" &&  a.username.includes(req.header('name')))
+         }
+         
+          if(!data1[0])
+          {
+            return res.json({"error": "No Bots Found with this Description or Bot Name" })
+          }
+        var data1 = data1[req.header('number')];
+       
+        if(!data1)
+        {
+           var data1 = await x.filter(a => a.status == "Approved" &&  a.username.includes(req.header('name')) || a.shortDesc.includes(req.header('name')))
+           data1.forEach(dat => {
+ res.json({'avatar': dat.avatar,
+      'botID': dat.botID, 
+      'username': `${dat.username}${dat.discrim}`, 
+      'shortDesc':dat.shortDesc,
+      'prefix': dat.prefix,
+      'votes': dat.votes,
+      'ownerID': dat.ownerID,
+      'owner': dat.ownerName,
+      'tags': dat.tags,
+      'certificate': dat.certificate,
+      'github': dat.github,
+      'support': dat.support,
+      'website': dat.website})
+           })
+           return;
+        }
+       
+        if(data1) {
+             
+             return  res.json({'avatar': data1.avatar,
+      'botID': data1.botID, 
+      'username': data1.username, 
+      'discrim': data1.discrim,
+      'shortDesc':data1.shortDesc,
+      'prefix': data1.prefix,
+      'votes': data1.votes,
+      'ownerID': data1.ownerID,
+      'owner': data1.ownerName,
+      'coowners': data1.coowners,
+      'tags': data1.tags,
+      'longDesc': data1.longDesc,
+      'certificate': data1.certificate,
+      'github': data1.github,
+      'support': data1.support,
+      'website': data1.website})
         }
     });
     //------------------- API -------------------//    //------------------- API -------------------//
@@ -1243,6 +2138,7 @@ Hook.send(msg);
       }
       return result;
    }
+  
   function makeidd(length) {
       var result           = '';
       var characters       = '123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';

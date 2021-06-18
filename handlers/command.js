@@ -12,12 +12,12 @@ module.exports= (client) => {
            
             if(pull.name){
                 client.commands.set(pull.name, pull);
-                table.addRow(file,'✅')
+                
             } else {
-                table.addRow(file, '❌ -> Missing a help.name, or help.name is not a string.')
+             
                 continue;
             }if(pull.aliases && Array.isArray(pull.aliases)) pull.aliases.forEach(alias => client.aliases.set(alias, pull.name))
         }
     });
-    console.log(table.toString());
+    
 }

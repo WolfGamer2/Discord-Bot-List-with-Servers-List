@@ -1,15 +1,15 @@
 const Discord = require('discord.js')
 const vcodes = require("vcodes.js");
 const botdata = require("../database/models/botlist/bots.js")
+const config = require("../../config.js");
 module.exports = {
   name: "total-bots",
-  aliases: ["t-b", "tb"],
+  aliases: ["t-b", "tb", "totalbots"],
  run: async(client, message, args) => {
-   if(message.member.roles.cache.has("849653061893750824") || message.member.roles.cache.has("849653292769869855"))
-{
+   
    let x = await botdata.find();
    message.channel.send(`Dumb bot list have total ${x.length} bots currently`);
-}
+
 
 
 

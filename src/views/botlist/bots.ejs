@@ -25,12 +25,20 @@
            <div class="is-pulled-right mt-vcodes mt-1">
                 <span data-tooltip="Total Votes" data-tooltip-location="left" class="badge badge-stats mb-vcodes mt-1 w-100"><i class="fad fa-chevron-up"></i>&nbsp;<%= a.votes || "0" %></span>
                 <span data-tooltip="Server Count" data-tooltip-location="left" class="badge badge-stats mt-1 w-100"><i class="fad fa-server"></i>&nbsp;<%= a.serverCount || "N/A" %></span>
+                  <span data-tooltip="Users Count" data-tooltip-location="left" class="badge badge-stats mt-1 w-100"><i class="fad fa-user"></i>&nbsp;<%= a.users || "N/A" %></span>
               </div>
-            <h4 translate="no" class="card-title"><%= a.username %>
-            <% if(a.certificate === "Certified") { %>
+               <h4 translate="no" class="card-title"><%= a.username %>
+               <% if(a.premium === "Premium") { %>
+										<span data-tooltip="Premium Bot" data-tooltip-location="top">
+											<i class="fad fa-bahai has-text-success"></i>
+										</span><% } %>
+									
+                    <%  if(a.certificate === "Certified") { %>
               <span data-tooltip="Verified Bot" data-tooltip-location="top"><i class="fad fa-badge-check has-text-success"></i></span>
             <% } %>
             </h4>
+            
+            
             <p translate="no" class="card-text vCodesbotDesc"><%= a.shortDesc %></p>
           </div>
           <div class="card-footer">

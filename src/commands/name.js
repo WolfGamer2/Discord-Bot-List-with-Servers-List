@@ -1,11 +1,14 @@
 const Discord = require('discord.js')
 const vcodes = require("vcodes.js");
-const botdata = require("../database/models/botlist/bots.js")
+const botdata = require("../database/models/botlist/bots.js");
+const config = require("../../config.js");
 module.exports = {
   name: "all-name",
   aliases: ["name-all", "allbots", "ab", "nameall"],
  run: async(client, message, args) => {
-   if(message.member.roles.cache.has("849623732925366289"))
+     let guild1 = client.guilds.cache.get(config.server.id)
+   let member1 = guild1.member(message.author.id);
+   if(member1.roles.cache.has("849653061893750824"))
 {
    let x = await botdata.find();
     count = 0;

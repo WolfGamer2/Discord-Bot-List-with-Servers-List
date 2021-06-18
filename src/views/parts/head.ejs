@@ -28,31 +28,37 @@
             </li>
 
             <li class="nav-item">
-              <a class="nav-link" href="/bots"><i class="fad fa-robot mr-1"></i> Bots</a>
+                <a class="nav-link" href="/bots"><i class="fad fa-robot mr-1"></i> Bots</a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link" href="/certification"><i class="fad fa-badge-check mr-1"></i> Certification</a>
             </li>
+             <li class="nav-item">
+                <a class="nav-link" href="/servers"><i class="fad fa-server mr-1"></i>Servers</a>
+            </li>
               </li>
               <li class="nav-item">
-              <a class="nav-link" href="/addbot"><i class="fad fa-robot mr-1"></i>Add Bot</a>
+              <a class="nav-link" href="/team"><i class="fad fa-users mr-1"></i>Our Team</a>
             </li>
              <li class="nav-item">
               <a class="nav-link" href="https://docs.dumbbotlist.tk"><i class="fad fa-book mr-1"></i>Docs</a>
             </li>
+             <li class="nav-item">
+              <a class="nav-link" href="https://dumbbotlist.tk/news"><i class="fad fa-newspaper mr-1"></i>News</a>
+            </li>
             <li class="nav-item">
                <a class="nav-link" href="/partners"><i class="fad fa-handshake mr-1"></i> Partners</a>
             </li>
-            <% if(user) { %>
-                <% 
-                let guild = bot.guilds.cache.get(config.server.id).members.cache.get(user.id);
-                if(guild) {
-                if(guild.roles.cache.get(roles.yonetici) || guild.roles.cache.get(roles.moderator)) {
-                %>
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin"><i class="fad fa-magic mr-1"></i> Admin Panel</a>
-                </li>
-                <% }} %>
-            <% } %>
+           
+            <li class="nav-item dropdown">
+          <span class="nav-link"><i class="fad fa-chevron-circle-down mr-1"></i> More</span>
+          </a>
+        <div class="dropdown-menu dropdown-menu-right animate slideIn" style="width:auto!important;">
+              <a class="dropdown-item" href="/privacy"><i class="fa fa-id-policy mr-2"></i> Privacy Policy</a>
+               <a class="dropdown-item" href="/terms"><i class="fa fa-script mr-2"></i> Terms and Conditions</a>
+                 <a class="dropdown-item" href="/premium"><i class="fad fa-crown mr-1"></i>Premium/AD</a>
+      </li>
+            
           </ul>
           <ul class="navbar-nav ml-auto">
             <% if(user) {%>
@@ -63,9 +69,23 @@
                 <div class="dropdown-menu dropdown-menu-right animate slideIn" style="max-width:220px!important;">
                     <a class="dropdown-item" href="/user/<%=user.id %>/"><i class="fa fa-id-card mr-2"></i> Profile</a>
                     <a class="dropdown-item" href="/addbot"><i class="fa fa-paper-plane mr-2"></i> Submit Bot</a>
+                     <a class="dropdown-item" href="/addserver"><i class="fa fa-server mr-2"></i> Submit Server</a>
                     <a class="dropdown-item" href="/codes"><i class="fa fa-code mr-2"></i> Code Share</a>
                     <a class="dropdown-item" href="/uptime/links"><i class="fa fa-sync-alt mr-2"></i> Uptime</a>
+                    <% let profile = pdata1.findOne({user: user.id}) %>
                   
+                    
+                    <% if(profile.paid == true) { %>
+                     <a class="dropdown-item" href="/premium/apply"><i class="fa fa-crown mr-2"></i>Apply for Premium</a>
+                    <% } %>
+                   
+                   <% 
+                let guild = bot.guilds.cache.get(config.server.id).members.cache.get(user.id);
+                if(guild) {
+                if(guild.roles.cache.get(roles.yonetici) || guild.roles.cache.get(roles.moderator)) {
+                %>
+                <a class="dropdown-item" href="/admin"><i class="fa fa-magic mr-2"></i> Admin Panel</a>
+                <% }} %>
                   <div class="dropdown-divider"></div>
                   <a class="dropdown-item dropdown-danger" href="/logout"><i class="fad fa-sign-out mr-2"></i> Logout</a>
                 </div>

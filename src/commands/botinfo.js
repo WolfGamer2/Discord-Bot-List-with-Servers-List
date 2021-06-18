@@ -1,9 +1,10 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const bots = require("../database/models/botlist/bots.js");
+const db = require("quick.db");
 module.exports = {
   name: "botinfo",
-  aliases: [],
+  aliases: ["bot-info"],
  run: async(client, message, args) => {
   
     var bot = message.mentions.users.first()
@@ -19,6 +20,8 @@ module.exports = {
       return message.channel.send("You have given an invalid bot id or mention")
     }
     
+    
+
    let b = await bots.findOne({ botID: bot.id });
    if(!b) return message.channel.send("Invalid bot id.")
    let website = b.website ?  " | [Website]("+b.website+")" : "";
@@ -30,6 +33,16 @@ module.exports = {
    } else {
      coowner = "";
    }
+   var checking = db.fetch(`rate_${bot.id}`);
+   if(!checking)
+   {
+     var checking = "100";
+   }
+       var check = db.fetch(`presence_${bot.id}`);
+       if(!check)
+       {
+         var check = "Online";
+       }
    const embed = new Discord.MessageEmbed()
    .setThumbnail(b.avatar)
    .setAuthor(b.username+"#"+b.discrim, b.avatar)
@@ -40,10 +53,12 @@ module.exports = {
    .addField("Votes", b.votes, true)
    .addField("Certificate", b.certificate, true)
    .addField("Short Description", b.shortDesc, true)
+   .addField("Status", check, true)
+   .addField("Uptime", `${checking}%`, true)
    .setColor("#7289da")
    .addField("Server Count", `${b.serverCount || "N/A"}`, true)
    .addField("Owner(s)", `<@${b.ownerID}>\n${coowner.replace("<@>", "")}`, true)
-   .addField("Links", `[Invite](https://discord.com/oauth2/authorize?client_id=${b.botID}&scope=bot&permissions=8)${website}${discord}${github}`, true)
+   .addField("Links", `[Invite](https://discord.com/oauth2/authorize?client_id=${b.botID}&scope=bot&permissions=0)${website}${discord}${github}`, true)
    message.channel.send(embed)
 }
 }

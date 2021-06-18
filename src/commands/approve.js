@@ -7,7 +7,9 @@ module.exports = {
   name: "bot-approve",
   aliases: ["approve"],
  run: async(client, message, args) => {
-   if(message.member.roles.cache.has("849653061893750824") || message.member.roles.cache.has("849653292769869855"))
+    let guild1 = client.guilds.cache.get(config.server.id)
+   let member1 = guild1.member(message.author.id);
+   if(member1.roles.cache.has("849653061893750824") || member1.roles.cache.has("849653292769869855"))
 {
  var certirole = config.roles.botlist.certified_bot;
     var botrole = config.roles.botlist.bot;
@@ -26,6 +28,8 @@ module.exports = {
     {
       return message.channel.send("You have given an invalid bot id or mention")
     }
+   
+    
     const botdata = await botsdata.findOne({ botID: bot.id })
     if(!botdata)
     {
@@ -86,8 +90,12 @@ await botsdata.findOneAndUpdate({botID: bot.id},{$set: {
                }
              })
          }
+         let tok = client.guilds.cache.get(config.testserver);
+         let bruhb = tok.member(bot.id);
+         bruhb.kick();
           message.channel.send("Discord bot Approved");
-
+  let channel = client.channels.cache.get("850952052288520224");
+  channel.send(`The bot <@${bot.id}> Has been Approved And Sr Mods and Administrators Please add the bot here. Invite link - https://discord.com/oauth2/authorize?client_id=${bot.id}&permissions=0&scope=bot`)
 
 }
  }

@@ -68,7 +68,7 @@
               <div class="text-center">
                 <h3 translate="no">
                   <%= botdata.username %> 
-                  <% if(botdata.botID === "746673633551974456") {%>
+                  <% if(botdata.botID === "849617280245432340") {%>
                     <a data-tooltip="Server Bot"
                     data-tooltip-location="top"><i class="fad fa-server has-text-primary"></i></a>
                  <% } %>
@@ -153,6 +153,29 @@
                 <div class="box-2-p"><i class="mt-1 fad fa-terminal"></i></div>
                 <p class="box-2">Prefix:&nbsp;<%= botdata.prefix %> </p>
               </div>
+              <div class="is-flex mt-1">
+                <div class="box-2-p"><i class="mt-1 fad fa-signal"></i></div>
+                <p class="box-2">Uptime In Percentage:&nbsp;<%= uptimerate %>%</p>
+              </div>
+              <div class="is-flex mt-1">
+                <div class="box-2-p"><i class="mt-1 fad fa-signal"></i></div>
+                <p class="box-2">Uptime In Time:&nbsp;<%= upistime.days %>d<%= upistime.hours %>h<%= upistime.minutes %>m</p>
+              </div>
+               <% if(botdata.users) {%>
+              <div class="is-flex mt-1">
+                <div class="box-2-p"><i class="mt-1 fad fa-user"></i></div>
+                <p class="box-2">Users:&nbsp;<%= botdata.users %> </p>
+              </div>
+              <% } %>
+               <div class="is-flex mt-1">
+                <div class="box-2-p"><i class="mt-1 fad fa-clock"></i></div>
+                <p class="box-2">Date Added:&nbsp;<%= botdata.date || "7/6/21" %> </p>
+              </div>
+               <div class="is-flex mt-1">
+                <div class="box-2-p"><i class="mt-1 fad fa-crown"></i></div>
+                <p class="box-2">Premiumed:&nbsp;<%= botdata.premium || "7/6/21" %> </p>
+              </div>
+             
               <div class="is-flex mt-1">
                 <div class="box-2-p"><i class="mt-1 fad fa-vote-yea"></i></div>
                 <p class="box-2">Votes:&nbsp;<%= botdata.votes || "0" %> </p>

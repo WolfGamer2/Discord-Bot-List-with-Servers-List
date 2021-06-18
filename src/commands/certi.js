@@ -7,7 +7,9 @@ module.exports = {
   name: "certificate",
   aliases: ["certi"],
  run: async(client, message, args) => {
-   if(message.member.roles.cache.has("849653061893750824") || message.member.roles.cache.has("849653292769869855"))
+    let guild1 = client.guilds.cache.get(config.server.id)
+   let member1 = guild1.member(message.author.id);
+   if(member1.roles.cache.has("849653061893750824") || member1.roles.cache.has("849653292769869855"))
 {
  var certirole = config.roles.botlist.certified_bot;
     var botrole = config.roles.botlist.bot;
