@@ -23,6 +23,7 @@
    const profiledata = require("./database/models/profile.js");
   const botsdata = require("./database/models/botlist/bots.js");
   const serversdata = require("./database/models/servers/server.js");
+  const vanitysdata = require("./database/models/vanity/vanity.js");
   const bumpsdata = require("./database/models/servers/bump.js");
   const voteSchema = require("./database/models/botlist/vote.js");
   const uptimeSchema = require("./database/models/uptime.js");
@@ -385,6 +386,15 @@ const codesSchema = require("./database/models/codes.js");
               config,
               data,
               page: page
+          });
+        })
+           app.get("/addvanity", checkMaintence, checkAuth, async (req,res) => {
+            
+          renderTemplate(res, req, "vanity/add.ejs", {
+              req,
+              roles,
+              config,
+              data: vanitysdata
           });
         })
          app.get("/bots/certified", checkMaintence, async (req,res) => {
@@ -857,6 +867,60 @@ today = mm + '/' + dd + '/' + yyyy;
       client.channels.cache.get(channels.botlog).send(approveembed2)
       res.redirect(`?success=true&message=Your bot has been successfully added to the system.&botID=${rBody['botID']}`)
       })
+    })
+
+
+
+        app.post("/addvanity", checkMaintence, checkAuth, async (req,res) => {
+      
+    let rBody = req.body;
+   
+
+
+      
+      let botvarmi = await vanitysdata.findOne({username: rBody['name']});
+   
+    
+      if(botvarmi)
+      
+      { 
+        return res.redirect("/error?code=404&message=There is Already an Vanity Name With Your One.");
+      }
+      let chek = botsdata.findOne({botID: rBody['bsid']});
+      let servchek = serversdata.findOne({serverID: rBody['bsid']});
+      if(!servchek && !chek)
+      {
+        return res.redirect("/error?code=404&message=There is No Bot or Server with Your Given ID in Our List.");
+      }
+      if(rBody['name'].includes("/") || rBody['name'] == ("*") || rBody['name'] == ("bots") || rBody['name'].includes("servers") || rBody['name'] == ("dc") || rBody['name'] == ("server") || rBody['name'] == ("bot") || rBody['name'] == ("premium") || rBody['name'] == ("news") || rBody['name'].includes("team") || rBody['name'] == ("discord") || rBody['name'].includes("certification") || rBody['name'] === ("admin") || rBody['name'] == ("partners") || rBody['name'] == ("privacy") || rBody['name'] == ("user") || rBody['name']== ("terms") || rBody['name'] == ("addserver") || rBody['name'] == ("addbot") || rBody['name'] == ("addvanity") || rBody['name'] == ("codes") || rBody['name'] == ("uptime") || rBody['name'] == ("logout") || rBody['name'] == ("login") || rBody['name'] == ("callback") || rBody['name'] == ("tag") || rBody['name'] == ("tags") || rBody['name'] == ("img"))
+      {
+      return res.redirect("/error?code=404&message=The Name You Have Given is Against Our Rules Please Try to Take Another.");
+      }
+      var today = new Date();
+var dd = String(today.getDate()).padStart(2, '0');
+var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+var yyyy = today.getFullYear();
+
+today = mm + '/' + dd + '/' + yyyy;
+      await new vanitysdata({
+           ID: rBody['bsid'],
+           id: rBody['bsid'],  
+           ownerID: req.user.id,
+           username: rBody['name'],
+      }).save()
+      
+   
+     
+    
+      
+      
+        let approveembed2 = new Discord.MessageEmbed()
+             .setTitle("Vanity Added")
+             .setDescription(`Vanity: ${a.name}\n Owner: <@${req.user.username}>`)
+             .setFooter("Embed Logs of Administration")
+      client.channels.cache.get(channels.botlog).send(approveembed2)
+      res.redirect(`?success=true&message=Your Vanity has been successfully added to the system.`)
+      
     })
 
     app.post("/serveradd/:serverID", checkMaintence, checkAuth, async (req,res) => {
@@ -2115,6 +2179,34 @@ app.post("/admin/premium/delete/:botID", checkMaintence, checkOwner, checkAuth, 
         }
     });
     //------------------- API -------------------//    //------------------- API -------------------//
+    app.get("/:botname", async(res, req) =>{
+      let test = vanitysdata.findOne({username: req.params.botname});
+    if(test)
+    {
+      let finded = botsdata.findOne({botID: test.ID});
+      if(!finded)
+      {
+        return res.redirect("/");
+      }
+      res.redirect(`https://discord.com/oauth2/authorize?client_id=${finded.botID}&permissions=8&scope=bot`);
+    } else {
+      return res.redirect("/");
+    }
+    })
+     app.get("/:servername", async(res, req) =>{
+      let test = vanitysdata.findOne({username: req.params.servername});
+    if(test)
+    {
+      let finded = serversdata.findOne({serverID: test.ID});
+      if(!finded)
+      {
+        return res.redirect("/");
+      }
+      res.redirect(a.invitelink);
+    } else {
+      return res.redirect("/");
+    }
+    })
     app.use((req, res) => {
         res.status(404).redirect("/")
     });

@@ -86,13 +86,21 @@ if(!uptimerate)
       
       var timetest = db.fetch(`timefr_${newPresence.userID}`)
       var timetest = Date.now() - timetest;
-      
+      let breh = db.fetch(`lastoffline`)
+     
       if(timetest > 60000)
       {
+      
          db.set(`presence_${newPresence.userID}`, "offline")
           db.set(`timefr_${newPresence.userID}`, Date.now())
        db.add(`offlinechecks_${newPresence.userID}`, 1)
+        if(breh === newPresence.userID)
+      {
+        return;
+      }
+         
        client.channels.cache.get("851339099528364081").send(`<@${newPresence.userID}> is Offline And Uptime Rate - ${uptimerate}%`) 
+
       }
       
       
@@ -112,13 +120,16 @@ if(!uptimerate)
       {
              var uptimerate = "99";
       }
-      
+        
         db.delete(`presence_${newPresence.userID}`, "online")
+        
         let to2 = db.fetch(`timefr_${newPresence.userID}`);
         var timeleft = await ms(Date.now() - to2);
         var hour = timeleft.hours;
        var minutes = timeleft.minutes;
        var seconds = timeleft.seconds;
+    
+       db.set(`lastoffline`, newPresence.userID);
        client.channels.cache.get("851339099528364081").send(`<@${newPresence.userID}> is Online And Uptime Rate - ${uptimerate}% And was Offline for ${hour}h ${minutes}m ${seconds}s`) 
        db.set(`timefr_${newPresence.userID}`, Date.now())
     }
