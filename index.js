@@ -161,6 +161,71 @@ client.on('ready',async () => {
         
       })
     }, 120000);
+    // random bots
+    setInterval(async() =>{
+      
+      var botdata = await botsdata.find();
+      if(!botdata)
+      {
+        return
+      }
+      
+        let randomBots = botdata.filter(a => a.certificate === "Certified")
+        randomBots.forEach((val, key) => {
+          randomIndex = Math.ceil(Math.random()*(key + 1));
+          randomBots[key] = randomBots[randomIndex];
+          randomBots[randomIndex] = val;
+        });
+    
+    
+        for(let i = 0; i < randomBots.length; i++) {
+        if (i === 1) break;
+        let labBots = randomBots[i];
+      if(labBots) {
+    
+     let bot = labBots;
+     let b = labBots;
+      let website = b.website ?  " | [Website]("+b.website+")" : "";
+   let github = b.github ? " | [Github]("+b.github+")" : "";
+   let discord = b.support ? " | [Support Server]("+b.support+")" : "";
+   let coowner;
+   if(!b.coowners.length <= 0) {
+     coowner = b.coowners.map(a => "<@"+a+">").join("\n");
+   } else {
+     coowner = "";
+   }
+   var checking = db.fetch(`rate_${bot.botID}`);
+   if(!checking)
+   {
+     var checking = "100";
+   }
+       var check = db.fetch(`presence_${bot.botID}`);
+       if(!check)
+       {
+         var check = "Online";
+       }
+   const embed = new Discord.MessageEmbed()
+   .setTitle("Every 12 Hours Dumb Bot List Choose an Random Certified Bot to Make It More Famoues")
+   .setThumbnail(b.avatar)
+   .setAuthor(b.username+"#"+b.discrim, b.avatar)
+   .setDescription("**[Vote for the bot named "+b.username+"#"+b.discrim+" in Dumb Bot List.](https://dumbbotlist.tk/bot/"+b.botID+"/vote)**")
+   .addField("ID", b.botID, true)
+   .addField("Username", b.username, true)
+   .addField("Discriminator", b.discrim, true)
+   .addField("Votes", b.votes, true)
+   .addField("Certificate", b.certificate, true)
+   .addField("Short Description", b.shortDesc, true)
+   .addField("Status", check, true)
+   .addField("Uptime", `${checking}%`, true)
+   .setColor("#7289da")
+   .addField("Server Count", `${b.serverCount || "N/A"}`, true)
+   .addField("Owner(s)", `<@${b.ownerID}>\n${coowner.replace("<@>", "")}`, true)
+   .addField("Links", `[Invite](https://discord.com/oauth2/authorize?client_id=${b.botID}&scope=bot&permissions=0)${website}${discord}${github}`, true)
+   client.channels.cache.get("851666771211845652").send(embed)
+      }
+        }
+
+    }, 43200000);
     setInterval(async() =>{
       
       var botdata = await botsdata.find();
@@ -220,15 +285,15 @@ client.on('ready',async () => {
 
 /*=======================================================================================*/
 const claudette = require("./src/database/models/uptime.js")
-    setInterval(() => {
-        claudette.find({}, function (err, docs) {
+    setInterval(async() => {
+        claudette.find({}, function async (err, docs) {
             if(err) console.log(err)
             if(!docs) return;
             docs.forEach(docs => {
                 fetch(docs.link).catch()
             })
         })
-    }, 300000)
+    }, 15000)
 
 client.on('guildMemberRemove', async member => {
     if(member.guild.id !== config.serverID) return
@@ -254,6 +319,22 @@ client.on('guildMemberRemove', async member => {
                 await votes.findOneAndDelete({ bot: a.bot, user: a.user })
             })
         }, 30000)
+         setInterval(async () => {
+          var votes = require('./src/database/models/botlist/bots.js')
+            let datalar = await votes.find()
+            if(datalar.length <= 0) return
+            datalar.forEach(async a => {
+              if(!a.Date3)
+              {
+                a.Date3 = Date.now();
+                await votes.findOneAndUpdate({ botID: a.botID }, {$set: {Date3: Date.now()}})
+              }
+                let süre = 604800000 -(Date.now() - a.Date3)
+                if(süre > 0) return
+                await votes.findOneAndUpdate({ botID: a.botID }, {$set: {votes: 0}})
+                await votes.findOneAndUpdate({ botID: a.botID }, {$set: {Date3: Date.now()}})
+            })
+        }, 604800000)
 })
 
     client.on('ready', async () => {
@@ -318,7 +399,7 @@ client.on("guildMemberAdd", async (member) => {
         guild.member(member.id).roles.add("850961502721933353")
         guild.member(member.id).roles.add(config.roles.botlist.bot)
         guild.member(botdata.ownerID).roles.add(config.roles.botlist.developer)
-        guild.member(member.id).roles.remove("849897253808504853")
+        guild.member(member.id).roles.remove("856763266486501376")
       } else if(botdata.status == "UnApproved")
       {
         client.channels.cache.get(config.channels.botlog).send("Someone invited a Unapproved bot here")
@@ -369,5 +450,5 @@ client.on("guildMemberRemove", async (member) => {
 /*=======================================================================================*/
 require("./src/server.js")(client);
 require("./src/database/connect.js")(client);
-client.login("ODQ5NjE3MjgwMjQ1NDMyMzQw.YLdxwA.jar8kQs9qV5t1xQqNJ9P9L9RDNY");
+client.login(process.env.token);
 /*=======================================================================================*/

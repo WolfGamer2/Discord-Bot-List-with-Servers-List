@@ -3,6 +3,7 @@ let hm = new mongoose.Schema({
 ownerID: String,
 ID: String,
 id:String,
+type: String,
 username: String,
 date: String,
 invitelink: String,

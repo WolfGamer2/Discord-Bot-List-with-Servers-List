@@ -12,6 +12,7 @@ invitelink: String,
 longDesc: String,
 shortDesc: String,
 tags: Array,
+vanity: String,
 bumps: {type: Number, default: 0},
 coowners: Array,
 today: String,
@@ -25,7 +26,8 @@ nsfw: String,
 premium: String,
 Date: {type: Date, default: null},
 certificate: String,
-votes: {type: Number, default: 0}
+votes: {type: Number, default: 0},
+tocheck: String
 });
 
 module.exports = mongoose.model("servers", hm);

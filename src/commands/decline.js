@@ -53,7 +53,7 @@ module.exports = {
     {
       return message.channel.send("Reason not given");
     }
-           client.users.fetch(botdata.ownerID).then(sahip => {
+           client.users.fetch(botdata.ownerID).then(async sahip => {
              let declineembed = new Discord.MessageEmbed()
              .setTitle("Bot Declined")
              .setDescription(`Reason: ${reason}\n Moderator: ${message.author.username}\n Bot: ${botdata.username}\n Owner: <@${botdata.ownerID}>`)
@@ -63,7 +63,7 @@ module.exports = {
                {
                client.users.cache.get(botdata.ownerID).send(`Your bot named **${botdata.username}** has been declined.\nReason: **${reason}**\nAuthorized: **${message.author.username}**`)
                
-                  botsdata.deleteOne({ botID: bot.id, ownerID: botdata.ownerID, botid: bot.id })
+                  await botsdata.deleteOne({ botID: bot.id, ownerID: botdata.ownerID, botid: bot.id })
                }
            })
                 let guild = client.guilds.cache.get(config.testserver);

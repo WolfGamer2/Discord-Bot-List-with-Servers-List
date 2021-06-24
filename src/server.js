@@ -20,6 +20,7 @@
   app.use(referrerPolicy({ policy: "strict-origin" }))
   const ms = require("parse-ms");
   // MODELS
+  const marked = require("markdown-converter");
    const profiledata = require("./database/models/profile.js");
   const botsdata = require("./database/models/botlist/bots.js");
   const serversdata = require("./database/models/servers/server.js");
@@ -126,7 +127,6 @@ const codesSchema = require("./database/models/codes.js");
     
  var ipgeoblock = require("node-ipgeoblock");
 
-   
     
      
    app.get("/login", (req, res, next) => {
@@ -224,9 +224,77 @@ const codesSchema = require("./database/models/codes.js");
     http.listen(3000);
     //------------------- EXTRA -------------------//
 
+function file_get_contents(filename) {
+    fetch(filename).then((resp) => resp.text()).then(function(data) {
+        return data;
+    });
+}
+ /* const getVisitorCountry = () => {
+  return new Promise((resolve, reject) => {
+    window
+      .fetch("https://ip2c.org/self")
+      .then((response) => response.text())
+      .then((data) => {
+        const [status, country] = String(data).split(";");
+        if (status !== "1") {
+          throw new Error("Unable to fetch country");
+        }
+        resolve(country);
+      })
+      .catch(() => {
+        resolve("US");
+      });
+  });
+ }; */
+ // get visitor's location
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition, handleError);
+  } else {
+    console.error("Geolocation is not supported by this browser.");
+  }
+}
 
+// watch visitor's location
+function watchLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(showPosition, handleError);
+  } else {
+    console.error("Geolocation is not supported by this browser.");
+  }
+}
+
+function handleError(error) {
+  let errorStr;
+  switch (error.code) {
+    case error.PERMISSION_DENIED:
+      errorStr = 'User denied the request for Geolocation.';
+      break;
+    case error.POSITION_UNAVAILABLE:
+      errorStr = 'Location information is unavailable.';
+      break;
+    case error.TIMEOUT:
+      errorStr = 'The request to get user location timed out.';
+      break;
+    case error.UNKNOWN_ERROR:
+      errorStr = 'An unknown error occurred.';
+      break;
+    default:
+      errorStr = 'An unknown error occurred.';
+  }
+  console.error('Error occurred: ' + errorStr);
+}
+
+function showPosition(position) {
+  console.log(`Latitude: ${position.coords.latitude}, longitude: ${position.coords.longitude}`);
+}
     app.get("/", checkMaintence, async (req, res) => {
       const botdata = await botsdata.find();
+      var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || null;
+     
+//getLocation()
+
+      
       renderTemplate(res, req, "index.ejs", { config, roles, botdata, getuser });
     });
     app.get("/dc", (req, res) => {
@@ -293,10 +361,10 @@ const codesSchema = require("./database/models/codes.js");
     });
 
     app.get("/sitemap.xml", async function(req,res) {
-        let link = "<url><loc>https://dumbbotlist.tk.fun/</loc></url>";
+        let link = "<url><loc>https://dumbbotlist.tk/</loc></url>";
         let botdataforxml = await botsdata.find()
         botdataforxml.forEach(bot => {
-            link += "\n<url><loc>https://dumbbotlist.tk.fun/bot/"+bot.botID+"</loc></url>";
+            link += "\n<url><loc>https://dumbbotlist.tk/bot/"+bot.botID+"</loc></url>";
         })
         res.set('Content-Type', 'text/xml');
         res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="https://www.google.com/schemas/sitemap-image/1.1">${link}</urlset>`);
@@ -415,6 +483,46 @@ const codesSchema = require("./database/models/codes.js");
               page: page
           });
         })
+       /*  app.get("/vanities/servers", checkMaintence, checkAuth, async (req,res) => {
+          let page = req.query.page || 1;
+          let x = await serversdata.find()
+          let serversdata1 = x.filter(async b => b.ownerID == req.user.id);
+          //tocheck
+          
+          if(page < 1) return res.redirect(`/`);
+          if(serversdata1.length <= 0) return res.redirect("/");
+          if((page > Math.ceil(serversdata1.length / 6)))return res.redirect(`/`);
+          if (Math.ceil(serversdata1.length / 6) < 1) {
+              page = 1;
+          };
+          renderTemplate(res, req, "vanity/serversall.ejs", {
+              req,
+              roles,
+              config,
+              page: page,
+              serversdata: serversdata1,
+              vanitysdata: vanitysdata.find()
+          });
+        }) */
+       /*   app.get("/vanities/bots", checkMaintence, checkAuth, async (req,res) => {
+          let page = req.query.page || 1;
+          let x = await botsdata.find()
+          let botsdata1 = x.filter(async b => b.ownerID == req.user.id && (await vanitysdata.findOne({ID: b.botID}).ID));
+         
+          if(page < 1) return res.redirect(`/`);
+          if(botsdata1.length <= 0) return res.redirect("/");
+          if((page > Math.ceil(botsdata1.length / 6)))return res.redirect(`/`);
+          if (Math.ceil(botsdata1.length / 6) < 1) {
+              page = 1;
+          };
+          renderTemplate(res, req, "vanity/botsall.ejs", {
+              req,
+              roles,
+              config,
+              page: page,
+              botsdata: botsdata1
+          });
+        }) */
         app.get("/bots/verified", checkMaintence, async (req,res) => {
           let page = req.query.page || 1;
           let x = await botsdata.find()
@@ -840,6 +948,7 @@ today = mm + '/' + dd + '/' + yyyy;
            token: makeToken(24),
            date: today,
            premium: "None",
+           Date3: Date.now()
       }).save()
       if(rBody['background']) {
           await botsdata.findOneAndUpdate({botID: rBody['botID']},{$set: {backURL: rBody['background']}}, function (err,docs) {})
@@ -870,7 +979,7 @@ today = mm + '/' + dd + '/' + yyyy;
     })
 
 
-
+        
         app.post("/addvanity", checkMaintence, checkAuth, async (req,res) => {
       
     let rBody = req.body;
@@ -886,8 +995,15 @@ today = mm + '/' + dd + '/' + yyyy;
       { 
         return res.redirect("/error?code=404&message=There is Already an Vanity Name With Your One.");
       }
-      let chek = botsdata.findOne({botID: rBody['bsid']});
-      let servchek = serversdata.findOne({serverID: rBody['bsid']});
+        let botvarmi1 = await vanitysdata.findOne({ID: rBody['bsid']});
+        if(botvarmi1)
+        {
+          return res.redirect("/error?code=404&message=There is Already an Vanity Of Your Bot/Server.");
+        }
+      
+      let chek = await botsdata.findOne({botID: rBody['bsid']});
+      let servchek = await serversdata.findOne({serverID: rBody['bsid']});
+
       if(!servchek && !chek)
       {
         return res.redirect("/error?code=404&message=There is No Bot or Server with Your Given ID in Our List.");
@@ -896,6 +1012,21 @@ today = mm + '/' + dd + '/' + yyyy;
       {
       return res.redirect("/error?code=404&message=The Name You Have Given is Against Our Rules Please Try to Take Another.");
       }
+      if(chek)
+      {
+        await botsdata.findOneAndUpdate({botID: rBody['bsid']}, {$set: {vanity: rBody['name'] }});
+      } if(servchek) {
+         await serversdata.findOneAndUpdate({serverID: rBody['bsid']}, {$set: {vanity: rBody['name'] }});
+      }
+      if(chek)
+      {
+      var frcheck = "bot";
+      } else if (servchek) {
+        var frcheck = "server";
+      }
+      if(req.user.id == chek.ownerID || req.user.id == servchek.ownerID)
+      {
+       
       var today = new Date();
 var dd = String(today.getDate()).padStart(2, '0');
 var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -907,6 +1038,7 @@ today = mm + '/' + dd + '/' + yyyy;
            id: rBody['bsid'],  
            ownerID: req.user.id,
            username: rBody['name'],
+           type: frcheck
       }).save()
       
    
@@ -916,11 +1048,13 @@ today = mm + '/' + dd + '/' + yyyy;
       
         let approveembed2 = new Discord.MessageEmbed()
              .setTitle("Vanity Added")
-             .setDescription(`Vanity: ${a.name}\n Owner: <@${req.user.username}>`)
+             .setDescription(`Vanity: ${rBody['name']}\n Owner: <@${req.user.username}>`)
              .setFooter("Embed Logs of Administration")
       client.channels.cache.get(channels.botlog).send(approveembed2)
-      res.redirect(`?success=true&message=Your Vanity has been successfully added to the system.`)
-      
+      return res.redirect(`?success=true&message=Your Vanity has been successfully added to the system.`)
+      } else {
+        return res.redirect("/error?code=404&message=You must be owner to do this.")
+      }
     })
 
     app.post("/serveradd/:serverID", checkMaintence, checkAuth, async (req,res) => {
@@ -1222,8 +1356,9 @@ today = mm + '/' + dd + '/' + yyyy;
       hours: uptime.hours,
       minutes: uptime.minutes
     };
-   
+      
       if(botdata.status != "Approved") {
+        checkAuth;
         if(req.user.id == botdata.ownerID || botdata.coowners.includes(req.user.id)) {
           let coowner = new Array()
           botdata.coowners.map(a => {
@@ -1231,7 +1366,7 @@ today = mm + '/' + dd + '/' + yyyy;
           })
           client.users.fetch(botdata.ownerID).then(aowner => {
           client.users.fetch(req.params.botID).then(abot => {
-              renderTemplate(res, req, "botlist/bot.ejs", { req, abot, config, botdata, coowner, aowner, roles, uptimerate, upistime});
+              renderTemplate(res, req, "botlist/bot.ejs", { req, abot, config, botdata, coowner, aowner, roles, uptimerate, upistime, marked});
           });
           });
         } else {
@@ -1245,10 +1380,11 @@ today = mm + '/' + dd + '/' + yyyy;
     
         client.users.fetch(botdata.ownerID).then(aowner => {
         client.users.fetch(req.params.botID).then(abot => {
-            renderTemplate(res, req, "botlist/bot.ejs", { req, abot, config, botdata, coowner, aowner, roles, uptimerate, upistime});
+            renderTemplate(res, req, "botlist/bot.ejs", { req, abot, config, botdata, coowner, aowner, roles, uptimerate, upistime, marked});
         });
         });
       }
+      
     });
     app.post("/bot/:botID", async (req,res) => {
       let botdata = await botsdata.findOne({botID: req.params.botID});
@@ -1262,6 +1398,7 @@ today = mm + '/' + dd + '/' + yyyy;
           })
         })
         return res.redirect('/bot/'+req.params.botID);
+        
     })
 
     app.get("/bot/:botID/edit", checkMaintence, checkAuth, async (req,res) => {
@@ -2013,6 +2150,29 @@ app.post("/admin/premium/delete/:botID", checkMaintence, checkOwner, checkAuth, 
             });
         });
     });
+     app.get("/:botID", async(req, res) => {
+         
+      let test = await vanitysdata.findOne({username: req.params.botID });
+    if(test)
+    {
+      let finded = await botsdata.findOne({botID: test.ID});
+      let secend = await serversdata.findOne({serverID: test.ID});
+      if(!finded && !secend)
+      {
+        return res.redirect("/");
+      }
+      if(finded)
+      {
+      res.redirect(`https://discord.com/oauth2/authorize?client_id=${finded.botID}&permissions=8&scope=bot`);
+      } else if(secend)
+      {
+        res.redirect(secend.invitelink);
+      }
+    } else {
+      return res.redirect("/");
+    }
+    })
+    
     app.get("/user/:userID/edit", checkMaintence, checkAuth, async (req, res) => {
       client.users.fetch(req.user.id).then(async member => {
       const pdata = await profiledata.findOne({userID: member.id});
@@ -2040,7 +2200,55 @@ app.post("/admin/premium/delete/:botID", checkMaintence, checkOwner, checkAuth, 
     app.get("/api", async (req, res) => {
       res.json({ "Hello": "World", "Template by": "dumbbotlist.tk"});
     });
+    const { Canvas, resolveImage } = require("canvas-constructor");
+     app.get("/api/embed/:id", async (req, res) => {
+  const bot = await botsdata.findOne({ botID: req.params.id });
+  if (!bot) return res.sendStatus(404);
+  try {
+    let owner = client.users.cache.get(bot.ownerID);
+    let geting = client.users.cache.get(req.params.id);
+    var forav = geting.displayAvatarURL();
+    var forav = forav.replace(".webp", ".png")
+        let avatar = await resolveImage(forav);
+   
+
+    
+//      .setTextFont('bold 35px sans')
+//  .setTextFont('bold 12px Verdana')
+//   
+//  
+const { registerFont } = require("canvas");
+registerFont('COMIC.ttf', { family: 'BOLD 15px' })
+    let img = new Canvas(500, 250)
+      .setColor("#404E5C")
+      .printRectangle(0, 0, 500, 250)
+      .setColor("#DCE2F9")
+  
+      .printText(bot.username, 120, 75)
+      .printRoundedImage(avatar, 30, 30, 70, 70, 20)
+      .setTextAlign("left")
+    
+      img.printText(`${bot.serverCount || "N/A"} Servers | ${bot.votes} Votes`, 30, 125);
+   
+    img
+      .printText(`Prefix: ${bot.prefix}`, 30, 145)
+    
+      .printWrappedText(bot.shortDesc, 30, 175, 440, 15)
+      
      
+      .printText(owner.username, 10, 245)
+      .setTextAlign("right")
+      .printText("https://dumbbotlist.tk", 490, 245);
+
+    res.writeHead(200, {
+      "Content-Type": "image/png"
+    });
+    res.end(await img.toBuffer(), "binary");
+  } catch (e) {
+    throw e
+    res.sendStatus(500);
+  }
+});
     app.get("/api/bots/:botID", async (req, res) => {
       const botinfo = await botsdata.findOne({ botID: req.params.botID })
       if(!botinfo) return res.json({ "error": "You entered invalid bot id."})
@@ -2179,34 +2387,7 @@ app.post("/admin/premium/delete/:botID", checkMaintence, checkOwner, checkAuth, 
         }
     });
     //------------------- API -------------------//    //------------------- API -------------------//
-    app.get("/:botname", async(res, req) =>{
-      let test = vanitysdata.findOne({username: req.params.botname});
-    if(test)
-    {
-      let finded = botsdata.findOne({botID: test.ID});
-      if(!finded)
-      {
-        return res.redirect("/");
-      }
-      res.redirect(`https://discord.com/oauth2/authorize?client_id=${finded.botID}&permissions=8&scope=bot`);
-    } else {
-      return res.redirect("/");
-    }
-    })
-     app.get("/:servername", async(res, req) =>{
-      let test = vanitysdata.findOne({username: req.params.servername});
-    if(test)
-    {
-      let finded = serversdata.findOne({serverID: test.ID});
-      if(!finded)
-      {
-        return res.redirect("/");
-      }
-      res.redirect(a.invitelink);
-    } else {
-      return res.redirect("/");
-    }
-    })
+   
     app.use((req, res) => {
         res.status(404).redirect("/")
     });

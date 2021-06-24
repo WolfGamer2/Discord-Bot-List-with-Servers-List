@@ -80,6 +80,15 @@
       "color": "#00b9ff",
       "rank": "Bot reviewer",
       "description": "Bot Reviewer and Suggestor"
+    },
+    {
+      "code": "944556843793",
+      "icon": "https://cdn.discordapp.com/avatars/831181411448651796/d8e38d60de2242fa5d6bdd5d59feefd5.webp",
+      "ownerID": "831181411448651796",
+      "serverName": "Kenx",
+      "color": "#00b9ff",
+      "rank": "Bot reviewer",
+      "description": "Bot Reviewer"
     }
   ]
 }

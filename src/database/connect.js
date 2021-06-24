@@ -2,7 +2,7 @@ const config = require("../../config.js");
 const mongoose = require("mongoose")
 
 module.exports = async (client) => {
-    mongoose.connect(config.bot.mongourl, {
+    mongoose.connect(process.env.mongourl, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         useCreateIndex: true,

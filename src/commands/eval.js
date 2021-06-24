@@ -10,7 +10,7 @@ module.exports = {
     if(!config.bot.owners.includes(message.author.id)) return  message.reply('could not be granted access permission.')
     try {
       var code = args.join(" ");
-      var evaled = eval(code);
+      var evaled = await eval(code);
  
       if (typeof evaled !== "string")
         evaled = require("util").inspect(evaled);

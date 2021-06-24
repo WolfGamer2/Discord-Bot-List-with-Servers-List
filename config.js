@@ -5,7 +5,7 @@ module.exports = {
         token: "ODQ5NjE3MjgwMjQ1NDMyMzQw.YLdxwA.mdy9ba-2URUcQDGAAXhMpOG647U",
         prefix: ".",
         owners: ["711769701541347381","720632216236851260"],
-        mongourl: "mongodb+srv://bot-list-lol:SzRpE6eXNegtLRvs@cluster0.jme3y.mongodb.net/bot-list-lol?retryWrites=true&w=majority"
+        mongourl: "F YOU"
     },
 
     website: {
@@ -35,8 +35,8 @@ module.exports = {
                 yirmidavet: "850740115256508468"
             },
             botlist: {
-                developer: "849678998195929089",
-                certified_developer: "849678998195929089",
+                developer: "856763106386378784",
+                certified_developer: "856763106386378784",
                 bot: "849677836516065280",
                 certified_bot: "849678582565568533",
                 premium_bot: "852477474134949889",
@@ -65,8 +65,8 @@ module.exports = {
                 yirmidavet: "850740115256508468"
             },
              botlist: {
-                developer: "849678998195929089",
-                certified_developer: "849678998195929089",
+                developer: "856763106386378784",
+                certified_developer: "856763106386378784",
                 bot: "849677836516065280",
                 certified_bot: "849678582565568533",
                 premium_bot: "852477474134949889",
@@ -87,7 +87,7 @@ module.exports = {
 
   },
    roles: {
-            yonetici: "849653292769869855",
+            yonetici: "856762501887033374",
             moderator: "849653061893750824",
             profile: {
                 booster: "849623732905443362",
@@ -106,8 +106,8 @@ module.exports = {
                 yirmidavet: "850740115256508468"
             },
             botlist: {
-                developer: "849678998195929089",
-                certified_developer: "849678998195929089",
+                developer: "856763106386378784",
+                certified_developer: "856763106386378784",
                 bot: "849677836516065280",
                 certified_bot: "849678582565568533",
                 premium_bot: "852477474134949889",
@@ -118,7 +118,7 @@ module.exports = {
         token: "ODQ5NjE3MjgwMjQ1NDMyMzQw.YLdxwA.mdy9ba-2URUcQDGAAXhMpOG647U",
         prefix: ".",
         owners: ["711769701541347381","720632216236851260"],
-        mongourl: "mongodb+srv://bot-list-lol:SzRpE6eXNegtLRvs@cluster0.jme3y.mongodb.net/bot-list-lol?retryWrites=true&w=majority"
+        mongourl: ""
     },
 
     website: {
@@ -134,7 +134,7 @@ module.exports = {
     server: {
         id: "849623732871757854",
         roles: {
-            yonetici: "849623732925366289",
+            yonetici: "856762501887033374",
             moderator: "849623732925366284",
             profile: {
                 booster: "849623732905443362",
@@ -153,8 +153,8 @@ module.exports = {
                 yirmidavet: "850740115256508468"
             },
             botlist: {
-                developer: "849623732888141868",
-                certified_developer: "849623732888141870",
+                developer: "856763106386378784",
+                certified_developer: "856763106386378784",
                 bot: "849623732871757860",
                 certified_bot: "849678582565568533",
                 premium_bot: "852477474134949889",

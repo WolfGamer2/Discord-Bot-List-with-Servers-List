@@ -34,7 +34,7 @@
                 <a class="nav-link" href="/certification"><i class="fad fa-badge-check mr-1"></i> Certification</a>
             </li>
              <li class="nav-item">
-                <a class="nav-link" href="/servers"><i class="fad fa-server mr-1"></i>Servers</a>
+                <a class="nav-link" href="/servers"><i class="fad fa-server mr-1"></i>Servers <span class="badge badge-danger">NEW</span></a>
             </li>
               </li>
               <li class="nav-item">
@@ -57,6 +57,7 @@
               <a class="dropdown-item" href="/privacy"><i class="fa fa-id-policy mr-2"></i> Privacy Policy</a>
                <a class="dropdown-item" href="/terms"><i class="fa fa-script mr-2"></i> Terms and Conditions</a>
                  <a class="dropdown-item" href="/premium"><i class="fad fa-crown mr-1"></i>Premium/AD</a>
+           <a class="dropdown-item" href="https://status.dumbbotlist.tk"><i class="fad fa- mr-1"></i>🗼 Status</a>
       </li>
             
           </ul>
@@ -70,10 +71,11 @@
                     <a class="dropdown-item" href="/user/<%=user.id %>/"><i class="fa fa-id-card mr-2"></i> Profile</a>
                     <a class="dropdown-item" href="/addbot"><i class="fa fa-paper-plane mr-2"></i> Submit Bot</a>
                      <a class="dropdown-item" href="/addserver"><i class="fa fa-server mr-2"></i> Submit Server</a>
+                     <a class="dropdown-item" href="/addvanity"><i class="fa fa-link"></i> Vanity</a>
                     <a class="dropdown-item" href="/codes"><i class="fa fa-code mr-2"></i> Code Share</a>
                     <a class="dropdown-item" href="/uptime/links"><i class="fa fa-sync-alt mr-2"></i> Uptime</a>
                     <% let profile = pdata1.findOne({user: user.id}) %>
-                  
+                  \
                     
                     <% if(profile.paid == true) { %>
                      <a class="dropdown-item" href="/premium/apply"><i class="fa fa-crown mr-2"></i>Apply for Premium</a>
