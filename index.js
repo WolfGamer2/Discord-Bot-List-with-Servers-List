@@ -450,5 +450,5 @@ client.on("guildMemberRemove", async (member) => {
 /*=======================================================================================*/
 require("./src/server.js")(client);
 require("./src/database/connect.js")(client);
-client.login(process.env.token);
+client.login(config.bot.token);
 /*=======================================================================================*/
